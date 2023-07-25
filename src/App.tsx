@@ -1,5 +1,7 @@
-import "./App.css";
+/* global chrome */
 
+import './App.css'
+import React, { useState } from 'react'
 import {
   SignedIn,
   SignedOut,
@@ -8,72 +10,58 @@ import {
   useClerk,
   useUser,
   ClerkProvider,
-} from "@clerk/chrome-extension";
-import {
-  useNavigate,
-  Routes,
-  Route,
-  MemoryRouter
-} from "react-router-dom";
+} from '@clerk/chrome-extension'
+import { Button, Container, Grid, Typography } from '@mui/material'
+import { useNavigate, Routes, Route, MemoryRouter } from 'react-router-dom'
+import PageFrame from './components/page-frame'
 
-function HelloUser() {
-  const { isSignedIn, user } = useUser();
-  const clerk = useClerk();
+const REACT_APP_SIGNIN_PAGE = process.env.REACT_APP_SIGNIN_PAGE || ''
+const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
 
-  if (!isSignedIn) {
-    return null;
+const publishableKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || ''
+
+function ClerkProviderWithRoutes() {
+  const navigate = useNavigate()
+
+  const handleSignIn = () => {
+    try {
+      chrome.tabs.create({
+        url: REACT_APP_APP_URL + REACT_APP_SIGNIN_PAGE,
+      })
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (
-    <>
-      <p>Hi, {user.primaryEmailAddress?.emailAddress}!</p>
-      <p>
-        <button onClick={() => clerk.signOut()}>Sign out</button>
-      </p>
-    </>
-  );
-}
-
-const publishableKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || "";
-
-function ClerkProviderWithRoutes() {
-  const navigate = useNavigate();
-
-  return (
-    <ClerkProvider publishableKey={publishableKey} navigate={(to) => navigate(to)}>
+    <ClerkProvider
+      publishableKey={publishableKey}
+      navigate={to => navigate(to)}
+    >
       <div className="App">
-        <header className="App-header">
-          <p>Welcome to Clerk Chrome Extension Starter!</p>
-          <a
-            className="App-link"
-            href="https://clerk.dev/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn more about Clerk
-          </a>
-        </header>
         <main className="App-main">
           <Routes>
+            <Route path="/sign-up/*" element={<SignUp signInUrl="/" />} />
             <Route
-              path="/sign-up/*"
-              element={<SignUp signInUrl="/" />}
+              path="/"
+              element={
+                <>
+                  <SignedIn>
+                    <PageFrame />
+                  </SignedIn>
+                  <SignedOut>
+                    <Button onClick={handleSignIn} variant="contained">
+                      Sign in
+                    </Button>
+                  </SignedOut>
+                </>
+              }
             />
-            <Route path='/' element={
-              <>
-                <SignedIn>
-                  <HelloUser />
-                </SignedIn>
-                <SignedOut>
-                  <SignIn afterSignInUrl="/" signUpUrl="/sign-up" />
-                </SignedOut>
-              </>
-            } />
           </Routes>
         </main>
       </div>
     </ClerkProvider>
-  );
+  )
 }
 
 function App() {
@@ -81,7 +69,7 @@ function App() {
     <MemoryRouter>
       <ClerkProviderWithRoutes />
     </MemoryRouter>
-  );
+  )
 }
 
-export default App;
+export default App

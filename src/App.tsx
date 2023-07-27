@@ -11,7 +11,7 @@ import {
   useUser,
   ClerkProvider,
 } from '@clerk/chrome-extension'
-import { Button, Container, Grid, Typography } from '@mui/material'
+import { Box, Button, Container, Grid, Typography } from '@mui/material'
 import { useNavigate, Routes, Route, MemoryRouter } from 'react-router-dom'
 import PageFrame from './components/page-frame'
 
@@ -50,9 +50,32 @@ function ClerkProviderWithRoutes() {
                     <PageFrame />
                   </SignedIn>
                   <SignedOut>
-                    <Button onClick={handleSignIn} variant="contained">
-                      Sign in
-                    </Button>
+                    <Box
+                      height="100vh"
+                      width="100vw"
+                      display="flex"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <Box
+                        width="100vw"
+                        display="flex"
+                        justifyContent="center"
+                        flexWrap="wrap"
+                      >
+                        <Typography
+                          variant="h5"
+                          gutterBottom
+                          textAlign="center"
+                          width="100vw"
+                        >
+                          Sign in to get started
+                        </Typography>
+                        <Button onClick={handleSignIn} variant="contained">
+                          Sign in
+                        </Button>
+                      </Box>
+                    </Box>
                   </SignedOut>
                 </>
               }

@@ -31,6 +31,11 @@ function PageFrame() {
         `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/pages/${page.id}/lists`,
         {
           list_ids: listIds,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
         }
       )
     } catch (err) {
@@ -193,7 +198,7 @@ function PageFrame() {
     )
   }
 
-  if (!page) {
+  if (!page || !lists || !pageLists) {
     return (
       <Box
         height="100vh"

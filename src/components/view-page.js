@@ -67,6 +67,16 @@ const ViewPage = ({
             scrollbarWidth: 'none',
           }}
         > */}
+          {!!page && lists && pageLists && (
+            <Grid item xs={12}>
+              <ListSelector
+                page={page}
+                lists={lists}
+                pageLists={pageLists}
+                onUpdate={onUpdateLists}
+              />
+            </Grid>
+          )}
           {!!page.title && (
             <Typography gutterBottom>
               <b>{page.title}</b>
@@ -82,6 +92,11 @@ const ViewPage = ({
             </Typography>
           )}
         </Grid>
+        {page.summary && (
+          <Grid item xs={12}>
+            <PanelSummary summary={page.summary} />
+          </Grid>
+        )}
         {!!page && lists && pageLists && (
           <Grid item xs={12}>
             <ListSelector
@@ -90,11 +105,6 @@ const ViewPage = ({
               pageLists={pageLists}
               onUpdate={onUpdateLists}
             />
-          </Grid>
-        )}
-        {page.summary && (
-          <Grid item xs={12}>
-            <PanelSummary summary={page.summary} />
           </Grid>
         )}
         {highlightedEntities &&

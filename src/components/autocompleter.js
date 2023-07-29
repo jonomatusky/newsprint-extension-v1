@@ -23,6 +23,7 @@ const Autocompleter = ({
   size,
   disablePortal,
   placeholder,
+  disableClearable,
 }) => {
   // const [inputValue, setInputValue] = useState('test')
 

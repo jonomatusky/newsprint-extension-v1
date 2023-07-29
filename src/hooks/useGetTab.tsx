@@ -1,6 +1,7 @@
 /* global chrome */
 
 import { useEffect, useState } from 'react'
+import blacklist from '../util/blacklist'
 
 const getHtml = () => {
   let clone = document.documentElement.cloneNode(true) as HTMLElement
@@ -38,9 +39,39 @@ const getHtml = () => {
   return html
 }
 
+const isLikelyArticle = (htmlString: string, url: string) => {
+  const parser = new DOMParser()
+  const html = parser.parseFromString(htmlString, 'text/html')
+
+  if (blacklist.some(pattern => pattern.test(url))) {
+    return false
+  }
+
+  const hasArticleTags = html.getElementsByTagName('article').length > 0
+  const isOgArticle =
+    html.querySelector('meta[property="og:type"][content="article"]') !== null
+
+  const schemaScripts = Array.from(
+    html.querySelectorAll('script[type="application/ld+json"]')
+  )
+  const hasNewsSchema = schemaScripts.some(script => {
+    let json
+    try {
+      json = JSON.parse(script.textContent || '')
+    } catch (error) {
+      return false
+    }
+    return json['@type'] === 'NewsArticle' || json['@type'] === 'Article'
+  })
+
+  return hasArticleTags || isOgArticle || hasNewsSchema
+}
+
 const useGetTab = () => {
   const [url, setUrl] = useState<any>(null)
   const [html, setHtml] = useState<any>(null)
+  const [isArticle, setIsArticle] = useState<any>(false)
+  const [prohibited, setProhibited] = useState<any>(false)
 
   useEffect(() => {
     const getUrl = async () => {
@@ -73,6 +104,10 @@ const useGetTab = () => {
           'chrome://',
           'chrome-extension://',
           'chrome-devtools://',
+          'chrome-native://',
+          'chrome-search://',
+          'chrome-untrusted://',
+          'file://',
         ]
 
         const isProhibited = prohibitedUrls.some(prohibitedUrl =>
@@ -81,6 +116,10 @@ const useGetTab = () => {
 
         if (isProhibited || !u || !tabId) {
           console.log('Prohibited URL')
+          setHtml(null)
+          setUrl(null)
+          setIsArticle(false)
+          setProhibited(true)
           return
         }
       } catch (err) {
@@ -96,13 +135,13 @@ const useGetTab = () => {
           })
 
           h = res[0]?.result
+          setIsArticle(isLikelyArticle(h, u))
+          setHtml(h)
+          setUrl(u)
         }
       } catch (err) {
         console.log(err)
       }
-
-      setHtml(h)
-      setUrl(u)
     }
 
     if (!url) {
@@ -110,7 +149,7 @@ const useGetTab = () => {
     }
   }, [url])
 
-  return { html, url }
+  return { html, url, isArticle, prohibited }
 }
 
 export default useGetTab

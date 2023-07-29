@@ -11,15 +11,54 @@ const REACT_APP_API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || ''
 
 function PageFrame() {
   const { analyze } = useAnalyze()
-  const { url } = useGetTab()
+  const { url, isArticle, prohibited } = useGetTab()
 
   const [page, setPage] = useState<any>(null)
   const [status, setStatus] = useState<any>('idle')
   const [lists, setLists] = useState<any>(null)
   const [listStatus, setListStatus] = useState<any>('idle')
-  const [pageLists, setPageLists] = useState<any>(null)
-  const [pageListStatus, setPageListStatus] = useState<any>('idle')
+  // const [pageLists, setPageLists] = useState<any>(null)
+  // const [pageListStatus, setPageListStatus] = useState<any>('idle')
   const analysisStatus = page?.analysis_status || null
+
+  let pageLists = page?.lists || []
+
+  useEffect(() => {
+    console.log('running effect')
+
+    let urlToOpen = REACT_APP_APP_URL + '/pages'
+
+    if (urlToOpen) {
+      let rootDomain = new URL(urlToOpen).hostname.split(':')[0] // Get domain without port
+
+      chrome.tabs.query({ currentWindow: true }, function (tabs) {
+        var domainExists = tabs.some(tab => {
+          if (tab.url) {
+            console.log(new URL(tab.url).hostname.split(':')[0]) // Log the hostname of the tab
+            return new URL(tab.url).hostname.split(':')[0] === rootDomain
+          }
+          return false
+        })
+
+        if (!domainExists) {
+          chrome.tabs.query(
+            { active: true, currentWindow: true },
+            function (tabs) {
+              if (tabs[0] && tabs[0].id !== undefined) {
+                let activeTabId = tabs[0].id
+                chrome.tabs.create(
+                  { url: urlToOpen, index: 0, active: false },
+                  function (tab) {
+                    chrome.tabs.update(activeTabId, { active: true })
+                  }
+                )
+              }
+            }
+          )
+        }
+      })
+    }
+  }, [])
 
   const { sessionToken } = useSession()
 
@@ -117,55 +156,64 @@ function PageFrame() {
     }
   }, [sessionToken])
 
-  useEffect(() => {
-    if (status === 'complete' && !!page) {
-      console.log('fetching lists')
-      fetchLists()
-    }
-  }, [fetchLists, status, page])
+  // useEffect(() => {
+  //   console.log('fetching lists')
+  //   fetchLists()
+  // }, [fetchLists])
 
-  const fetchPageLists = useCallback(async () => {
-    setPageListStatus('loading')
-    if (!!sessionToken) {
-      try {
-        const result = await axios.get(
-          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/pages/${page?.id}/lists`,
-          {
-            headers: {
-              Authorization: `Bearer ${sessionToken}`,
-            },
-          }
-        )
+  // const fetchPageLists = useCallback(async () => {
+  //   setPageListStatus('loading')
+  //   if (!!sessionToken) {
+  //     try {
+  //       const result = await axios.get(
+  //         `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/pages/${page?.id}/lists`,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${sessionToken}`,
+  //           },
+  //         }
+  //       )
 
-        const fetchedLists = result.data?.data
+  //       const fetchedLists = result.data?.data
 
-        if (!fetchedLists) {
-          throw new Error('Lists not found')
-        }
+  //       if (!fetchedLists) {
+  //         throw new Error('Lists not found')
+  //       }
 
-        setPageLists(fetchedLists)
-        setPageListStatus('complete')
-      } catch (err: any) {
-        console.log(err)
-        setPageListStatus('error')
-      }
-    }
-  }, [sessionToken, page?.id])
+  //       setPageLists(fetchedLists)
+  //       setPageListStatus('complete')
+  //     } catch (err: any) {
+  //       console.log(err)
+  //       setPageListStatus('error')
+  //     }
+  //   }
+  // }, [sessionToken, page?.id])
 
-  useEffect(() => {
-    if (status === 'complete' && page?.id) {
-      console.log('fetching page lists')
-      fetchPageLists()
-    }
-  }, [fetchPageLists, page?.id, status])
+  // useEffect(() => {
+  //   if (status === 'complete' && page?.id) {
+  //     console.log('fetching page lists')
+  //     fetchPageLists()
+  //   }
+  // }, [fetchPageLists, page?.id, status])
 
   // fetch page on load
   useEffect(() => {
     if (status !== 'loading' && !page && !!url) {
       console.log('fetching first')
-      fetchDataAndSetPage(true)
+      if (!prohibited && isArticle) {
+        fetchDataAndSetPage(true)
+        fetchLists()
+      }
     }
-  }, [fetchDataAndSetPage, fetchLists, page, status, url])
+  }, [
+    fetchDataAndSetPage,
+    fetchLists,
+    page,
+    status,
+    url,
+    prohibited,
+    isArticle,
+  ])
 
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -184,6 +232,20 @@ function PageFrame() {
   console.log('status', status)
   console.log('url', url)
 
+  if (prohibited) {
+    return (
+      <Box
+        height="100vh"
+        width="100vw"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Typography>Unable to analyze this page</Typography>
+      </Box>
+    )
+  }
+
   if (status === 'error') {
     return (
       <Box
@@ -198,7 +260,24 @@ function PageFrame() {
     )
   }
 
-  if (!page || !lists || !pageLists) {
+  if (!!page && !isArticle) {
+    return (
+      <Box
+        height="100vh"
+        width="100vw"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Typography>This doesn't look like an article</Typography>
+        <Button variant="contained" onClick={analyze}>
+          Analyze Anyway
+        </Button>
+      </Box>
+    )
+  }
+
+  if (!page) {
     return (
       <Box
         height="100vh"
@@ -213,26 +292,12 @@ function PageFrame() {
   }
 
   return (
-    <Box p={2.5}>
-      <ViewPage
-        page={page}
-        lists={lists}
-        pageLists={pageLists}
-        onUpdateLists={handleUpdateLists}
-      />
-      {analysisStatus === 'pending' ? (
-        <>
-          <CircularProgress />
-          <Typography textAlign="center">Analyzing...</Typography>
-        </>
-      ) : (
-        <>
-          <Button variant="contained" onClick={analyze}>
-            Try Again
-          </Button>
-        </>
-      )}
-    </Box>
+    <ViewPage
+      page={page}
+      lists={lists}
+      pageLists={pageLists}
+      onUpdateLists={handleUpdateLists}
+    />
   )
 }
 

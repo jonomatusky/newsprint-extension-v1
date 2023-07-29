@@ -3,7 +3,7 @@ import axios from 'axios'
 import Autocompleter from './autocompleter'
 
 const ListSelector = ({ lists = [], pageLists = [], onUpdate }) => {
-  let pageListIds = pageLists.map(list => list.id)
+  let pageListIds = pageLists.map(list => list.list_id)
   const [value, setValue] = useState(pageListIds)
 
   const handleChange = async newValue => {
@@ -28,6 +28,8 @@ const ListSelector = ({ lists = [], pageLists = [], onUpdate }) => {
       // loading={loading}
       size="small"
       disablePortal
+      disableClearable
+      disabled={lists.length === 0}
     />
   )
 }

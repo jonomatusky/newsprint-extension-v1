@@ -1,10 +1,26 @@
-import React from 'react'
-import { Box, CircularProgress, Grid, Typography } from '@mui/material'
+/* global chrome */
+
+import React, { useState } from 'react'
+import {
+  Box,
+  Button,
+  Card,
+  CircularProgress,
+  Grid,
+  IconButton,
+  List,
+  ListItem,
+  Skeleton,
+  Typography,
+} from '@mui/material'
 import PanelSummary from './panel-summary'
-import Entities from './entities'
 import CardQuote from './card-quote'
-import HighlightCard from './highlight-card'
 import ListSelector from './list-selector'
+import Chat from './chat'
+import MentionCard from './mention-card'
+import { Check, OpenInNew } from '@mui/icons-material'
+
+const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
 
 const ViewPage = ({
   page = {},
@@ -15,6 +31,95 @@ const ViewPage = ({
   entities = [],
   onUpdateLists,
 }) => {
+  const [open, setOpen] = useState(false)
+
+  // show 10 entities, util user clicks show more
+  const showMore = 10
+
+  const [showMoreEntities, setShowMoreEntities] = useState(showMore)
+
+  if (isError) return <div>failed to load</div>
+
+  let pageEntities = []
+
+  if (page.entities) {
+    pageEntities = page.entities.filter(
+      pageEntity =>
+        pageEntity?.entity?.name !== page.author_name &&
+        pageEntity?.entity?.name !== page.publisher_name
+    )
+  }
+
+  const getPageEntityFromId = id => {
+    return pageEntities.find(pageEntity => pageEntity.entity.id === id)
+  }
+
+  const quotes = page.quotes?.sort((a, b) => a.index > b.index)
+
+  // const orderedEntities = organzations.concat(people)
+
+  const mentions = page?.mentions || []
+
+  const getMentionsForPageEntity = pageEntity => {
+    if (!pageEntity) return []
+
+    const filteredMentions =
+      mentions.filter(m => m.entity_id === pageEntity?.entity.id) || []
+
+    let seen = new Set()
+
+    return filteredMentions.filter(m => {
+      const key = `${m.excerpt_begin_offset}-${m.excerpt_end_offset}`
+
+      if (seen.has(key)) {
+        return false
+      } else {
+        seen.add(key)
+        return true
+      }
+    })
+  }
+
+  for (const pageEntity of pageEntities) {
+    const mentions = getMentionsForPageEntity(pageEntity)
+    pageEntity.mentions = mentions
+  }
+
+  const orderedEntities = pageEntities
+    .filter(
+      pageEntity =>
+        pageEntity.entity.type === 'person' ||
+        pageEntity.entity.type === 'organization'
+    )
+    .sort((a, b) => {
+      const aConfidence = a.confidence || 0
+      const bConfidence = b.confidence || 0
+      const aMentions = a.mentions?.length || 0
+      const bMentions = b.mentions?.length || 0
+
+      const aHighConfidence = aConfidence >= 0.6
+      const bHighConfidence = bConfidence >= 0.6
+
+      // Compare whether one is above or below 0.60
+      if (aHighConfidence !== bHighConfidence) {
+        return aConfidence >= 0.6 ? -1 : 1
+      }
+
+      // If the confidence levels are on the same side of 0.60, then sort by mentions
+      if (aMentions !== bMentions) {
+        return bMentions - aMentions
+      }
+
+      // If mentions are equal, sort by confidence
+      return bConfidence - aConfidence
+    })
+
+  console.log(orderedEntities)
+
+  const handleShowMore = () => {
+    setShowMoreEntities(!!showMoreEntities ? null : showMore)
+  }
+
   if (isLoading || !page)
     return (
       <Box
@@ -28,98 +133,116 @@ const ViewPage = ({
       </Box>
     )
 
-  if (isError) return <div>failed to load</div>
+  const backendUrl =
+    REACT_APP_APP_URL + '/pages?a=' + encodeURIComponent(page.url)
 
-  const pageEntities = page.entities || []
-
-  const organzations =
-    pageEntities.filter(
-      pageEntity => pageEntity.entity?.type === 'organization'
-    ) || []
-
-  const people =
-    pageEntities.filter(pageEntity => pageEntity.entity?.type === 'person') ||
-    []
-
-  const getPageEntityFromId = id => {
-    return pageEntities.find(pageEntity => pageEntity.entity.id === id)
+  const handleOpenInNew = () => {
+    chrome.tabs.create({ url: backendUrl })
   }
 
-  const quotes = page.quotes?.sort((a, b) => a.index > b.index)
-
-  const orderedEntities = organzations.concat(people)
-
-  const highlightedEntities = orderedEntities.filter(orderedEntity => {
-    return entities.find(entity => entity.id === orderedEntity.entity.id)
-  })
-
   return (
-    <>
-      <Grid container spacing={2}>
+    <Box p={2.5} height="600px" overflow={open ? 'hidden' : 'scroll'}>
+      <Grid container spacing={1.5}>
         <Grid item xs={12}>
-          {/* <Box
-          overflow="scroll"
-          sx={{
-            '&::-webkit-scrollbar': {
-              display: 'none',
-            },
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-          }}
-        > */}
-          {!!page && lists && pageLists && (
-            <Grid item xs={12}>
+          <Card>
+            <Box p={2.5} pt={1} pb={2}>
+              <Box display="flex">
+                <Box flexGrow={1} display="flex" alignItems="center">
+                  <Check color="primary" sx={{ mr: 0.5 }} />
+                  <Typography>
+                    <b>Saved to Newsprint</b>
+                  </Typography>
+                </Box>
+                {page.url && (
+                  <Box alignItems="center" mr={-1}>
+                    <IconButton onClick={handleOpenInNew}>
+                      <OpenInNew />
+                    </IconButton>
+                  </Box>
+                )}
+              </Box>
               <ListSelector
                 page={page}
                 lists={lists}
                 pageLists={pageLists}
                 onUpdate={onUpdateLists}
               />
-            </Grid>
-          )}
-          {!!page.title && (
-            <Typography gutterBottom>
-              <b>{page.title}</b>
-            </Typography>
-          )}
-          {(!!page.publisher_name || !!page.author_name) && (
-            <Typography variant="body2">
-              <i>
-                {[page.publisher_name, page.author_name]
-                  .filter(Boolean)
-                  .join(' | ')}
-              </i>
-            </Typography>
-          )}
+            </Box>
+          </Card>
         </Grid>
-        {page.summary && (
+        {/* {!!page.title && (
+          <Grid item xs={12}>
+            <Card>
+              <Box p={2.5} pt={2} pb={2}>
+                <Typography gutterBottom>
+                  <b>{page.title}</b>
+                </Typography>
+                {(!!page.publisher_name || !!page.author_name) && (
+                  <Typography variant="body2">
+                    <i>
+                      {[page.publisher_name, page.author_name]
+                        .filter(Boolean)
+                        .join(' | ')}
+                    </i>
+                  </Typography>
+                )}
+              </Box>
+            </Card>
+          </Grid>
+        )} */}
+        {page.summary ? (
           <Grid item xs={12}>
             <PanelSummary summary={page.summary} />
           </Grid>
-        )}
-        {!!page && lists && pageLists && (
+        ) : page.analysis_status === 'pending' ? (
           <Grid item xs={12}>
-            <ListSelector
-              page={page}
-              lists={lists}
-              pageLists={pageLists}
-              onUpdate={onUpdateLists}
-            />
+            <Card>
+              <Box p={3.5} pl={4} pt={3} pb={2.5}>
+                <List sx={{ listStyleType: 'disc', pl: 1, pt: 0, pb: 0 }}>
+                  <ListItem
+                    sx={{
+                      display: 'list-item',
+                      pt: 0,
+                      pb: 1,
+                      pl: 0,
+                      pr: 0,
+                    }}
+                  >
+                    <Skeleton variant="text" />
+                    <Skeleton variant="text" />
+                  </ListItem>
+                  <ListItem
+                    sx={{
+                      display: 'list-item',
+                      pt: 0,
+                      pb: 1,
+                      pl: 0,
+                      pr: 0,
+                    }}
+                  >
+                    <Skeleton variant="text" />
+                    <Skeleton variant="text" />
+                  </ListItem>
+                  <ListItem
+                    sx={{
+                      display: 'list-item',
+                      pt: 0,
+                      pb: 1,
+                      pl: 0,
+                      pr: 0,
+                    }}
+                  >
+                    <Skeleton variant="text" />
+                    <Skeleton variant="text" />
+                  </ListItem>
+                </List>
+              </Box>
+            </Card>
           </Grid>
+        ) : (
+          <></>
         )}
-        {highlightedEntities &&
-          highlightedEntities.length > 0 &&
-          highlightedEntities.map((entity, index) => (
-            <Grid item xs={12} key={'hi-' + entity.id}>
-              <HighlightCard
-                pageEntity={entity}
-                mentions={page.mentions}
-                quotes={quotes}
-              />
-            </Grid>
-          ))}
-
-        {quotes && quotes.length > 0 && (
+        {quotes && quotes.length > 0 ? (
           <>
             <Grid item xs={12} container spacing={1}>
               <Grid item xs={12}>
@@ -135,42 +258,70 @@ const ViewPage = ({
               ))}
             </Grid>
           </>
-        )}
-        {organzations && organzations.length > 0 && (
+        ) : page.analysis_status === 'pending' ? (
           <Grid item xs={12}>
-            <Typography gutterBottom>Companies</Typography>
-            <Entities pageEntities={organzations} mentions={page.mentions} />
+            <Card>
+              <Box p={3.5} pl={4} pt={3} pb={2.5}>
+                <Skeleton variant="text" />
+                <Skeleton variant="text" />
+              </Box>
+            </Card>
           </Grid>
+        ) : (
+          <></>
         )}
-        {people && people.length > 0 && (
-          <Grid item xs={12}>
-            <Typography gutterBottom>People</Typography>
-            <Entities pageEntities={people} mentions={page.mentions} />
+        {orderedEntities && orderedEntities.length > 0 ? (
+          <Grid item xs={12} container spacing={1}>
+            <Grid item xs={12}>
+              <Typography>Mentions</Typography>
+            </Grid>
+            {orderedEntities
+              .slice(0, showMoreEntities || orderedEntities.length)
+              .map(entity => (
+                <Grid item xs={12}>
+                  <MentionCard pageEntity={entity} />
+                </Grid>
+              ))}
+            {!!showMoreEntities && orderedEntities.length > showMore && (
+              <Grid item xs={12}>
+                <Button onClick={handleShowMore}>Show More</Button>
+              </Grid>
+            )}
           </Grid>
+        ) : page.analysis_status === 'pending' ? (
+          <Grid item xs={12}>
+            <Card>
+              <Box p={3.5} pl={4} pt={3} pb={2.5}>
+                <Skeleton variant="text" />
+                <Skeleton variant="text" />
+              </Box>
+            </Card>
+          </Grid>
+        ) : (
+          <></>
         )}
         <Grid item xs={12}>
-          <Box height={32} />
+          <Box height={open ? 640 : 100} />
         </Grid>
-        {/* <Grid item xs={12}>
-            {page.url && (
-              <Link target="_blank" href={page.url}>
-                <Typography variant="subtitle2">
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <span>{page.url}</span>
-                    <OpenInNew fontSize="inherit" sx={{ ml: 0.25 }} />
-                  </div>
-                </Typography>
-              </Link>
-            )}
-          </Grid> */}
       </Grid>
-    </>
+      <Box
+        sx={{
+          width: { xs: '400px', lg: '600px' },
+        }}
+        position="fixed"
+        bottom={0}
+        right={0}
+        display="flex"
+        width="100%"
+        zIndex="100"
+        borderLeft={1}
+        borderTop={1}
+        borderColor="divider"
+        bgcolor="background.default"
+      >
+        <Chat pageId={page.id} open={open} setOpen={setOpen} />
+      </Box>
+    </Box>
   )
 }
 

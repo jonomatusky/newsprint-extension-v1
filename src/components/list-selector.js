@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
-import axios from 'axios'
+import { useState } from 'react'
 import Autocompleter from './autocompleter'
 
 const ListSelector = ({ lists = [], pageLists = [], onUpdate }) => {
@@ -29,7 +28,7 @@ const ListSelector = ({ lists = [], pageLists = [], onUpdate }) => {
       size="small"
       disablePortal
       disableClearable
-      disabled={lists.length === 0}
+      disabled={!lists || lists?.length === 0}
     />
   )
 }

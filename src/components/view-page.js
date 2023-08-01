@@ -30,6 +30,7 @@ const ViewPage = ({
   isError = false,
   entities = [],
   onUpdateLists,
+  analyze,
 }) => {
   const [open, setOpen] = useState(false)
 
@@ -299,6 +300,30 @@ const ViewPage = ({
           </Grid>
         ) : (
           <></>
+        )}
+        {page.analysis_status.startsWith('failed') && (
+          <Grid item xs={12}>
+            <Card>
+              <Box
+                p={3.5}
+                pl={4}
+                pt={3}
+                pb={2.5}
+                display="flex"
+                flexWrap="wrap"
+                justifyContent="center"
+              >
+                <Box width="100%">
+                  <Typography gutterBottom textAlign="center">
+                    <b>Analysis Failed</b>
+                  </Typography>
+                </Box>
+                <Button variant="contained" onClick={analyze}>
+                  Try Again
+                </Button>
+              </Box>
+            </Card>
+          </Grid>
         )}
         <Grid item xs={12}>
           <Box height={open ? 640 : 100} />

@@ -1,38 +1,48 @@
-import { useAuth } from '@clerk/chrome-extension'
-import React, { useCallback, useEffect } from 'react'
+import axios from 'axios'
+import React, { useEffect } from 'react'
+
+const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
+const REACT_APP_API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || ''
 
 const useSession = () => {
-  const { getToken } = useAuth()
-
-  const [sessionToken, setSessionToken] = React.useState('')
-
-  const handleSetSessionToken = (token: String) => {
-    console.log('setting session token')
-    setSessionToken(token as string)
-  }
-
-  const sessionTokenIsNew = useCallback(
-    (token: any) => {
-      return token !== sessionToken
-    },
-    [sessionToken]
-  )
+  const [auth, setAuth] = React.useState(null as boolean | null)
+  const [user, setUser] = React.useState(null as any)
 
   useEffect(() => {
-    const scheduler = setInterval(async () => {
-      const token = await getToken()
-
-      const isNew = sessionTokenIsNew(token)
-
-      if (isNew && !!token) {
-        handleSetSessionToken(token as string)
+    const getMe = async () => {
+      try {
+        const response = await axios.get(
+          REACT_APP_APP_URL + REACT_APP_API_ENDPOINT + '/me'
+        )
+        setUser(response.data)
+        setAuth(true)
+      } catch (err) {
+        setAuth(false)
       }
-    }, 1000)
+    }
 
-    return () => clearInterval(scheduler)
-  }, [getToken, sessionTokenIsNew])
+    let counter = 0
+    const limit = 10
 
-  return { sessionToken }
+    const interval = setInterval(() => {
+      counter++
+
+      if (counter === limit) {
+        clearInterval(interval)
+        setAuth(false)
+      }
+
+      if (auth === null) {
+        getMe()
+      } else {
+        clearInterval(interval)
+      }
+    }, 1000) // Check every 100ms
+
+    return () => clearInterval(interval) // Clean up on unmount
+  }, [auth])
+
+  return { auth, user }
 }
 
 export default useSession

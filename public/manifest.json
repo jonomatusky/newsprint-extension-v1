@@ -1,22 +1,21 @@
 {
-  "name": "Clerk Extension v3",
-  "description": "Clerk Extension v3",
+  "name": "Newsprint",
+  "description": "Summarize, save and share news articles",
   "version": "0.1",
   "manifest_version": 3,
-  "permissions": ["tabs", "scripting", "activeTab"],
+  "permissions": ["storage", "tabs", "scripting", "activeTab"],
   "action": {
     "default_popup": "index.html",
-    "default_title": "Open the popup"
+    "default_title": "Open Newsprint"
   },
   "icons": {
-    "16": "logo192.png",
-    "48": "logo192.png",
-    "128": "logo192.png"
+    "16": "logo-16.png",
+    "48": "logo-48.png",
+    "128": "logo-128.png"
   },
   "host_permissions": [
-    "http://gentle-guinea-22.clerk.accounts.dev/",
-    "https://gentle-guinea-22.clerk.accounts.dev/",
     "http://localhost:3000/",
-    "https://localhost:3000/"
+    "https://localhost:3000/",
+    "https://newsprint.com/"
   ]
 }

@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import ViewPage from './view-page'
 import useAnalyze from '../hooks/useAnalyze'
-import useSession from '../hooks/useSession'
 import axios from 'axios'
 import useGetTab from '../hooks/useGetTab'
 
@@ -60,22 +59,22 @@ function PageFrame() {
     }
   }, [])
 
-  const { sessionToken } = useSession()
+  // const { sessionToken } = useSession()
 
   const handleUpdateLists = async (listIds: Array<String>) => {
-    console.log(listIds)
+    console.log('listIds', listIds)
 
     try {
       await axios.patch(
         `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/pages/${page.id}/lists`,
         {
           list_ids: listIds,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
         }
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${sessionToken}`,
+        //   },
+        // }
       )
     } catch (err) {
       console.log(err)
@@ -84,77 +83,72 @@ function PageFrame() {
 
   const fetchDataAndSetPage = useCallback(
     async (analyzeIfNotFound = false) => {
-      if (!!sessionToken) {
-        console.log('fetching')
-        try {
-          const result = await axios.get(
-            `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/pages?url=${url}`,
-            {
-              headers: {
-                Authorization: `Bearer ${sessionToken}`,
-              },
-            }
-          )
+      console.log('fetching')
+      try {
+        const result = await axios.get(
+          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/pages?url=${url}`
+          // {
+          //   headers: {
+          //     Authorization: `Bearer ${sessionToken}`,
+          //   },
+          // }
+        )
 
-          const fetchedPage = result.data?.data?.[0]
+        const fetchedPage = result.data?.data?.[0]
 
-          if (!fetchedPage) {
-            throw new Error('Page not found')
-          }
+        if (!fetchedPage) {
+          throw new Error('Page not found')
+        }
 
-          setPage(fetchedPage)
-          setStatus('complete')
-        } catch (err: any) {
-          if (
-            err.response &&
-            err.response.status === 404 &&
-            analyzeIfNotFound
-          ) {
-            try {
-              let analyzedPage = await analyze()
-              setPage(analyzedPage)
-              setStatus('complete')
-            } catch (err: any) {
-              console.log(err)
-              setStatus('error')
-            }
-          } else {
-            setPage(null)
+        setPage(fetchedPage)
+        setStatus('complete')
+      } catch (err: any) {
+        console.log(err)
+
+        if (err.response && err.response.status === 404 && analyzeIfNotFound) {
+          try {
+            let analyzedPage = await analyze()
+            setPage(analyzedPage)
+            setStatus('complete')
+          } catch (err: any) {
+            console.log(err)
             setStatus('error')
           }
+        } else {
+          setPage(null)
+          setStatus('error')
         }
       }
     },
-    [analyze, sessionToken, url]
+    [analyze, url]
   )
 
   const fetchLists = useCallback(async () => {
     setListStatus('loading')
-    if (!!sessionToken) {
-      try {
-        const result = await axios.get(
-          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/lists`,
-          {
-            headers: {
-              Authorization: `Bearer ${sessionToken}`,
-            },
-          }
-        )
 
-        const fetchedLists = result.data?.data
+    try {
+      const result = await axios.get(
+        `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/lists`
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${sessionToken}`,
+        //   },
+        // }
+      )
 
-        if (!fetchedLists) {
-          throw new Error('Lists not found')
-        }
+      const fetchedLists = result.data?.data
 
-        setLists(fetchedLists)
-        setListStatus('complete')
-      } catch (err: any) {
-        console.log(err)
-        setListStatus('error')
+      if (!fetchedLists) {
+        throw new Error('Lists not found')
       }
+
+      setLists(fetchedLists)
+      setListStatus('complete')
+    } catch (err: any) {
+      console.log(err)
+      setListStatus('error')
     }
-  }, [sessionToken])
+  }, [])
 
   // useEffect(() => {
   //   console.log('fetching lists')
@@ -297,6 +291,7 @@ function PageFrame() {
       lists={lists}
       pageLists={pageLists}
       onUpdateLists={handleUpdateLists}
+      analyze={analyze}
     />
   )
 }

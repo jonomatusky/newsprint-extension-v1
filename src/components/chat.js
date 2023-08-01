@@ -21,7 +21,7 @@ import {
   Speed,
 } from '@mui/icons-material'
 import axios from 'axios'
-import useSession from '../hooks/useSession'
+// import useSession from '../hooks/useSession'
 
 const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
 
@@ -29,7 +29,7 @@ const Chat = ({ pageId, open, setOpen }) => {
   const [chat, setChat] = useState({})
   const [message, setMessage] = useState('')
 
-  let { sessionToken } = useSession()
+  // let { sessionToken } = useSession()
 
   let messages = chat.messages || []
   let status = chat.status || 'idle'
@@ -44,12 +44,12 @@ const Chat = ({ pageId, open, setOpen }) => {
     console.log('fetching chat history')
     try {
       const response = await axios.get(
-        `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`,
-        {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
-        }
+        `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${sessionToken}`,
+        //   },
+        // }
       )
 
       let c = response.data?.chat || []
@@ -60,7 +60,7 @@ const Chat = ({ pageId, open, setOpen }) => {
     } catch (err) {
       console.log(err)
     }
-  }, [pageId, sessionToken])
+  }, [pageId])
 
   useEffect(() => {
     if (open && pageId) {
@@ -92,6 +92,7 @@ const Chat = ({ pageId, open, setOpen }) => {
     console.log('sending message')
 
     let m = message
+    let c = chat
 
     setMessage('')
     setChat({
@@ -105,15 +106,16 @@ const Chat = ({ pageId, open, setOpen }) => {
 
       await axios.post(
         `${REACT_APP_APP_URL}/api/pages/${pageId}/chats/messages`,
-        { message },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
-        }
+        { message }
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${sessionToken}`,
+        //   },
+        // }
       )
     } catch (err) {
       setMessage(m)
+      setChat(c)
       console.log(err)
     }
   }
@@ -146,12 +148,12 @@ const Chat = ({ pageId, open, setOpen }) => {
         `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`,
         {
           status: 'active',
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
         }
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${sessionToken}`,
+        //   },
+        // }
       )
     } catch (err) {
       console.log(err)
@@ -171,12 +173,12 @@ const Chat = ({ pageId, open, setOpen }) => {
         `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`,
         {
           speed,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
         }
+        // {
+        //   headers: {
+        //     Authorization: `Bearer ${sessionToken}`,
+        //   },
+        // }
       )
     } catch (err) {
       console.log(err)
@@ -192,9 +194,9 @@ const Chat = ({ pageId, open, setOpen }) => {
         data: {
           status: 'closed',
         },
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-        },
+        // headers: {
+        //   Authorization: `Bearer ${sessionToken}`,
+        // },
       })
     } catch (err) {
       console.log(err)

@@ -1,7 +1,7 @@
 {
   "name": "Newsprint",
   "description": "Summarize, save and share news articles",
-  "version": "0.1",
+  "version": "0.0.1",
   "manifest_version": 3,
   "permissions": ["storage", "tabs", "scripting", "activeTab"],
   "action": {

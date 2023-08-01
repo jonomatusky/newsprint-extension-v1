@@ -100,7 +100,7 @@ export default function Entities({ pageEntities: entities, mentions }) {
               )}
             </Box>
           ))}
-          {entities.length > entitiesBeforeMore && (
+          {entities?.length > entitiesBeforeMore && (
             <Button
               endIcon={showAll ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
               onClick={() => setShowAll(!showAll)}

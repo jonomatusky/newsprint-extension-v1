@@ -137,7 +137,7 @@ const MentionCard = ({ pageEntity: entity }) => {
                     <b>{mentions.length}</b> time{mentions.length > 1 && 's'}
                   </Typography>
                 </Box>
-                <Box>
+                {/* <Box>
                   <Button
                     label={mentions.length}
                     endIcon={
@@ -149,11 +149,11 @@ const MentionCard = ({ pageEntity: entity }) => {
                   >
                     {showMore ? 'Hide' : 'Show'}
                   </Button>
-                </Box>
+                </Box> */}
               </Box>
             </Box>
           </Grid>
-          {showMore &&
+          {/* {showMore &&
             mentions.map(mention => (
               <Grid item xs={12} key={mention.id}>
                 <Card elevation={0} sx={{ bgcolor: 'background.paperLight' }}>
@@ -164,7 +164,7 @@ const MentionCard = ({ pageEntity: entity }) => {
                   </Box>
                 </Card>
               </Grid>
-            ))}
+            ))} */}
           {/* <Grid item xs={12}>
           <Button
             endIcon={showMore ? <KeyboardArrowUp /> : <KeyboardArrowDown />}

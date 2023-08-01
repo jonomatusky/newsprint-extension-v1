@@ -3,7 +3,7 @@
   "description": "Summarize, save and share news articles",
   "version": "0.0.1",
   "manifest_version": 3,
-  "permissions": ["storage", "tabs", "scripting", "activeTab"],
+  "permissions": ["tabs", "scripting", "activeTab"],
   "action": {
     "default_popup": "index.html",
     "default_title": "Open Newsprint"
@@ -12,10 +12,5 @@
     "16": "logo-16.png",
     "48": "logo-48.png",
     "128": "logo-128.png"
-  },
-  "host_permissions": [
-    "http://localhost:3000/",
-    "https://localhost:3000/",
-    "https://newsprint.com/"
-  ]
+  }
 }

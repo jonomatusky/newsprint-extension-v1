@@ -67,18 +67,20 @@ const ViewPage = ({
     const filteredMentions =
       mentions.filter(m => m.entity_id === pageEntity?.entity.id) || []
 
-    let seen = new Set()
+    return filteredMentions
 
-    return filteredMentions.filter(m => {
-      const key = `${m.excerpt_begin_offset}-${m.excerpt_end_offset}`
+    // let seen = new Set()
 
-      if (seen.has(key)) {
-        return false
-      } else {
-        seen.add(key)
-        return true
-      }
-    })
+    // return filteredMentions.filter(m => {
+    //   const key = `${m.excerpt_begin_offset}-${m.excerpt_end_offset}`
+
+    //   if (seen.has(key)) {
+    //     return false
+    //   } else {
+    //     seen.add(key)
+    //     return true
+    //   }
+    // })
   }
 
   for (const pageEntity of pageEntities) {

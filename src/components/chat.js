@@ -32,6 +32,7 @@ const Chat = ({ pageId, open, setOpen }) => {
   // let { sessionToken } = useSession()
 
   let messages = chat.messages || []
+  let messagesLength = messages.length || 0
   let status = chat.status || 'idle'
 
   const bottomRef = useRef()
@@ -136,7 +137,7 @@ const Chat = ({ pageId, open, setOpen }) => {
     if (open && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages.length, open])
+  }, [messagesLength, open])
 
   const handleCancel = async () => {
     try {

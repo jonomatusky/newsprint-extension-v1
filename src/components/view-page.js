@@ -134,8 +134,7 @@ const ViewPage = ({
       </Box>
     )
 
-  const backendUrl =
-    REACT_APP_APP_URL + '/pages?a=' + encodeURIComponent(page.url)
+  const backendUrl = REACT_APP_APP_URL + '?a=' + encodeURIComponent(page.url)
 
   const handleOpenInNew = () => {
     chrome.tabs.create({ url: backendUrl })

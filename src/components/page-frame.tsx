@@ -39,7 +39,7 @@ function PageFrame() {
   let pageLists = page?.lists || []
 
   useEffect(() => {
-    let urlToOpen = REACT_APP_APP_URL + '/pages'
+    let urlToOpen = REACT_APP_APP_URL
 
     if (urlToOpen) {
       let rootDomain = new URL(urlToOpen).hostname.split(':')[0] // Get domain without port
@@ -47,7 +47,10 @@ function PageFrame() {
       chrome.tabs.query({ currentWindow: true }, function (tabs) {
         var domainExists = tabs.some(tab => {
           if (tab.url) {
-            return new URL(tab.url).hostname.split(':')[0] === rootDomain
+            return (
+              new URL(tab.url).hostname.split(':')[0] === rootDomain &&
+              tab.url !== REACT_APP_APP_URL + '/ext-auth/success'
+            )
           }
           return false
         })

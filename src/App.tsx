@@ -15,10 +15,13 @@ function App() {
 
   // console.log('auth', auth)
 
-  const handleSignIn = () => {
+  const handleOpenAuth = (isSignUp = false) => {
     try {
       chrome.tabs.create({
-        url: REACT_APP_APP_URL + '/ext-auth/sign-in?id=' + extensionId,
+        url:
+          REACT_APP_APP_URL +
+          `/ext-auth/${isSignUp ? 'sign-up' : 'sign-in'}?id=` +
+          extensionId,
       })
     } catch (e) {
       console.error(e)
@@ -68,7 +71,13 @@ function App() {
                 >
                   Sign up to get started
                 </Typography>
-                <Button onClick={handleSignIn} variant="contained">
+                <Button
+                  onClick={() => handleOpenAuth(true)}
+                  variant="contained"
+                >
+                  Sign up
+                </Button>
+                <Button onClick={() => handleOpenAuth()} variant="outlined">
                   Sign in
                 </Button>
               </Box>

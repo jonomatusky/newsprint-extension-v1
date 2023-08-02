@@ -25,16 +25,16 @@ const useSession = (): useSessionReturnType => {
   const [error, setError] = React.useState(false as boolean)
   const [extensionId, setExtensionId] = React.useState(null as String | null)
 
-  // console.log('extensionId', extensionId)
-  // console.log('storageReady', storageReady)
-  // console.log('auth', auth)
-  // console.log('user', user)
+  console.log('extensionId', extensionId)
+  console.log('storageReady', storageReady)
+  console.log('auth', auth)
+  console.log('user', user)
 
-  // useEffect(() => {
-  //   chrome.storage.local.get(null, function (data) {
-  //     console.log(data)
-  //   })
-  // })
+  useEffect(() => {
+    chrome.storage.local.get(null, function (data) {
+      console.log(data)
+    })
+  })
 
   const logout = async () => {
     await chrome.storage.local.remove(['token'])
@@ -46,7 +46,12 @@ const useSession = (): useSessionReturnType => {
     const getMe = async () => {
       try {
         const response = await axios.get(
-          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me`
+          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
         )
         const data = response.data || {}
         const user = data.data
@@ -55,7 +60,6 @@ const useSession = (): useSessionReturnType => {
           setAuth(true)
           setUser(user)
           setExtensionId(null)
-          chrome.storage.local.remove(['extension_id'])
         } else {
           setAuth(false)
         }
@@ -86,7 +90,7 @@ const useSession = (): useSessionReturnType => {
   }, [])
 
   useEffect(() => {
-    if (auth === false && storageReady) {
+    if (auth === false && storageReady && !extensionId) {
       chrome.storage.local.get(['extension_id'], result => {
         if (result.extension_id) {
           setExtensionId(result.extension_id)
@@ -98,7 +102,7 @@ const useSession = (): useSessionReturnType => {
         }
       })
     }
-  }, [auth, storageReady])
+  }, [auth, storageReady, extensionId])
 
   useEffect(() => {
     if (storageReady && auth === null) {
@@ -146,8 +150,19 @@ const useSession = (): useSessionReturnType => {
           await chrome.storage.local.set({ token })
           setSessionToken(token)
         }
-      } catch (e) {
-        console.error(e)
+      } catch (err: any) {
+        // if extension id is already claimed, remove extension id
+        try {
+          if (err.response && err.response.status === 400) {
+            chrome.storage.local.remove(['extension_id'])
+            setExtensionId(null)
+          } else {
+            console.log(err)
+          }
+        } catch (err) {
+          console.log(err)
+          setError(true)
+        }
       }
     }
 

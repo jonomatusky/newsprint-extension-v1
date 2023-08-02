@@ -97,7 +97,7 @@ function PageFrame() {
           `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/pages?url=${url}`,
           {
             headers: {
-              authorization: `Bearer ${sessionToken}`,
+              Authorization: `Bearer ${sessionToken}`,
             },
           }
         )

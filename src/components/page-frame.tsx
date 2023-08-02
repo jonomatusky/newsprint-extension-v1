@@ -1,21 +1,37 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useContext,
+} from 'react'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import ViewPage from './view-page'
 import useAnalyze from '../hooks/useAnalyze'
 import axios from 'axios'
 import useGetTab from '../hooks/useGetTab'
+import { SessionContext } from '../context/session-context'
 
 const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
 const REACT_APP_API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || ''
 
 function PageFrame() {
   const { analyze } = useAnalyze()
+  const session = useContext(SessionContext)
+  const { logout, sessionToken } = session || {
+    logout: () => {},
+    sessionToken: null,
+  }
   const { url, isArticle, prohibited } = useGetTab()
+
+  console.log(url)
+  console.log(isArticle)
+  console.log(prohibited)
 
   const [page, setPage] = useState<any>(null)
   const [status, setStatus] = useState<any>('idle')
   const [lists, setLists] = useState<any>(null)
-  const [listStatus, setListStatus] = useState<any>('idle')
+  // const [listStatus, setListStatus] = useState<any>('idle')
   // const [pageLists, setPageLists] = useState<any>(null)
   // const [pageListStatus, setPageListStatus] = useState<any>('idle')
   const analysisStatus = page?.analysis_status || null
@@ -23,8 +39,6 @@ function PageFrame() {
   let pageLists = page?.lists || []
 
   useEffect(() => {
-    console.log('running effect')
-
     let urlToOpen = REACT_APP_APP_URL + '/pages'
 
     if (urlToOpen) {
@@ -33,7 +47,6 @@ function PageFrame() {
       chrome.tabs.query({ currentWindow: true }, function (tabs) {
         var domainExists = tabs.some(tab => {
           if (tab.url) {
-            console.log(new URL(tab.url).hostname.split(':')[0]) // Log the hostname of the tab
             return new URL(tab.url).hostname.split(':')[0] === rootDomain
           }
           return false
@@ -59,22 +72,18 @@ function PageFrame() {
     }
   }, [])
 
-  // const { sessionToken } = useSession()
-
   const handleUpdateLists = async (listIds: Array<String>) => {
-    console.log('listIds', listIds)
-
     try {
       await axios.patch(
         `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/pages/${page.id}/lists`,
         {
           list_ids: listIds,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
         }
-        // {
-        //   headers: {
-        //     Authorization: `Bearer ${sessionToken}`,
-        //   },
-        // }
       )
     } catch (err) {
       console.log(err)
@@ -83,15 +92,14 @@ function PageFrame() {
 
   const fetchDataAndSetPage = useCallback(
     async (analyzeIfNotFound = false) => {
-      console.log('fetching')
       try {
         const result = await axios.get(
-          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/pages?url=${url}`
-          // {
-          //   headers: {
-          //     Authorization: `Bearer ${sessionToken}`,
-          //   },
-          // }
+          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/pages?url=${url}`,
+          {
+            headers: {
+              authorization: `Bearer ${sessionToken}`,
+            },
+          }
         )
 
         const fetchedPage = result.data?.data?.[0]
@@ -120,20 +128,20 @@ function PageFrame() {
         }
       }
     },
-    [analyze, url]
+    [analyze, url, sessionToken]
   )
 
   const fetchLists = useCallback(async () => {
-    setListStatus('loading')
+    // setListStatus('loading')
 
     try {
       const result = await axios.get(
-        `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/lists`
-        // {
-        //   headers: {
-        //     Authorization: `Bearer ${sessionToken}`,
-        //   },
-        // }
+        `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/lists`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
+        }
       )
 
       const fetchedLists = result.data?.data
@@ -143,12 +151,12 @@ function PageFrame() {
       }
 
       setLists(fetchedLists)
-      setListStatus('complete')
+      // setListStatus('complete')
     } catch (err: any) {
       console.log(err)
-      setListStatus('error')
+      // setListStatus('error')
     }
-  }, [])
+  }, [sessionToken])
 
   // useEffect(() => {
   //   console.log('fetching lists')
@@ -192,9 +200,9 @@ function PageFrame() {
 
   // fetch page on load
   useEffect(() => {
-    if (status !== 'loading' && !page && !!url) {
-      console.log('fetching first')
-      if (!prohibited && isArticle) {
+    if (status === 'idle' && !page && !!url && !!sessionToken) {
+      // console.log('fetching first')
+      if (prohibited === false && isArticle === true) {
         fetchDataAndSetPage(true)
         fetchLists()
       }
@@ -207,6 +215,7 @@ function PageFrame() {
     url,
     prohibited,
     isArticle,
+    sessionToken,
   ])
 
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null)
@@ -223,10 +232,10 @@ function PageFrame() {
     }
   }, [analysisStatus, fetchDataAndSetPage, url])
 
-  console.log('status', status)
-  console.log('url', url)
+  // console.log('status', status)
+  // console.log('url', url)
 
-  if (prohibited) {
+  if (prohibited === true) {
     return (
       <Box
         height="100vh"
@@ -240,21 +249,7 @@ function PageFrame() {
     )
   }
 
-  if (status === 'error') {
-    return (
-      <Box
-        height="100vh"
-        width="100vw"
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Typography>Error loading page</Typography>
-      </Box>
-    )
-  }
-
-  if (!!page && !isArticle) {
+  if (isArticle === false) {
     return (
       <Box
         height="100vh"
@@ -264,9 +259,27 @@ function PageFrame() {
         alignItems="center"
       >
         <Typography>This doesn't look like an article</Typography>
-        <Button variant="contained" onClick={analyze}>
+        {/* <Button variant="contained" onClick={analyze}>
           Analyze Anyway
-        </Button>
+        </Button> */}
+      </Box>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <Box
+        height="100vh"
+        width="100vw"
+        display="flex"
+        flexWrap="wrap"
+        justifyContent="center"
+        alignItems="center"
+      >
+        <Typography width="100%" textAlign="center">
+          Error loading page
+        </Typography>
+        <Button onClick={logout}>Log Out</Button>
       </Box>
     )
   }

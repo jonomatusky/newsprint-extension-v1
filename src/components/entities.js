@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Box, Button, Card, Chip, Grid, Typography } from '@mui/material'
 import { KeyboardArrowUp, KeyboardArrowDown } from '@mui/icons-material'
 
@@ -30,17 +30,17 @@ export default function Entities({ pageEntities: entities, mentions }) {
     })
   }
 
-  const getProminence = pageEntity => {
-    const salience = pageEntity.salience
-    // filter into high medium and low
-    if (salience > 0.65) {
-      return 'High'
-    } else if (salience > 0.35) {
-      return 'Medium'
-    } else {
-      return 'Low'
-    }
-  }
+  // const getProminence = pageEntity => {
+  //   const salience = pageEntity.salience
+  //   // filter into high medium and low
+  //   if (salience > 0.65) {
+  //     return 'High'
+  //   } else if (salience > 0.35) {
+  //     return 'Medium'
+  //   } else {
+  //     return 'Low'
+  //   }
+  // }
 
   const pageEntities = showAll
     ? entities

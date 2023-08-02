@@ -1,32 +1,32 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Chip,
   Grid,
   Typography,
-  Divider,
-  Button,
+  // Divider,
+  // Button,
   Card,
-  CardActionArea,
+  // CardActionArea,
 } from '@mui/material'
 import {
   Business,
-  KeyboardArrowDown,
-  KeyboardArrowUp,
+  // KeyboardArrowDown,
+  // KeyboardArrowUp,
   Person,
 } from '@mui/icons-material'
 
 const MentionCard = ({ pageEntity: entity }) => {
-  const [expandedId, setExpandedId] = useState(null)
+  // const [expandedId, setExpandedId] = useState(null)
   const [showMore, setShowMore] = useState(false)
 
-  const handleExpandEntity = id => {
-    setExpandedId(expandedId === id ? null : id)
-  }
+  // const handleExpandEntity = id => {
+  //   setExpandedId(expandedId === id ? null : id)
+  // }
 
   let mentions = entity?.mentions || []
 
-  const headline = mentions[0]?.excerpt_begin_offset === 0
+  // const headline = mentions[0]?.excerpt_begin_offset === 0
 
   const getProminence = pageEntity => {
     const salience = pageEntity?.salience

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -21,7 +21,7 @@ import {
   Speed,
 } from '@mui/icons-material'
 import axios from 'axios'
-// import useSession from '../hooks/useSession'
+import { SessionContext } from '../context/session-context'
 
 const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
 
@@ -29,7 +29,7 @@ const Chat = ({ pageId, open, setOpen }) => {
   const [chat, setChat] = useState({})
   const [message, setMessage] = useState('')
 
-  // let { sessionToken } = useSession()
+  const { sessionToken } = useContext(SessionContext)
 
   let messages = chat.messages || []
   let messagesLength = messages.length || 0
@@ -42,30 +42,26 @@ const Chat = ({ pageId, open, setOpen }) => {
   }, [pageId, setOpen])
 
   const fetchChatHistory = useCallback(async () => {
-    console.log('fetching chat history')
     try {
       const response = await axios.get(
-        `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`
-        // {
-        //   headers: {
-        //     Authorization: `Bearer ${sessionToken}`,
-        //   },
-        // }
+        `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
+        }
       )
 
       let c = response.data?.chat || []
-
-      console.log(c)
 
       setChat(c)
     } catch (err) {
       console.log(err)
     }
-  }, [pageId])
+  }, [pageId, sessionToken])
 
   useEffect(() => {
     if (open && pageId) {
-      console.log('opened')
       fetchChatHistory()
     }
   }, [open, pageId, fetchChatHistory]) // Fetch chat history when the chat window is opened.
@@ -90,8 +86,6 @@ const Chat = ({ pageId, open, setOpen }) => {
   }
 
   const sendMessage = async () => {
-    console.log('sending message')
-
     let m = message
     let c = chat
 
@@ -107,12 +101,12 @@ const Chat = ({ pageId, open, setOpen }) => {
 
       await axios.post(
         `${REACT_APP_APP_URL}/api/pages/${pageId}/chats/messages`,
-        { message }
-        // {
-        //   headers: {
-        //     Authorization: `Bearer ${sessionToken}`,
-        //   },
-        // }
+        { message },
+        {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
+        }
       )
     } catch (err) {
       setMessage(m)
@@ -123,8 +117,6 @@ const Chat = ({ pageId, open, setOpen }) => {
 
   const handleSubmit = async event => {
     event.preventDefault()
-
-    console.log('sending')
 
     try {
       sendMessage()
@@ -149,12 +141,12 @@ const Chat = ({ pageId, open, setOpen }) => {
         `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`,
         {
           status: 'active',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
         }
-        // {
-        //   headers: {
-        //     Authorization: `Bearer ${sessionToken}`,
-        //   },
-        // }
       )
     } catch (err) {
       console.log(err)
@@ -174,12 +166,12 @@ const Chat = ({ pageId, open, setOpen }) => {
         `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`,
         {
           speed,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
         }
-        // {
-        //   headers: {
-        //     Authorization: `Bearer ${sessionToken}`,
-        //   },
-        // }
       )
     } catch (err) {
       console.log(err)
@@ -190,15 +182,15 @@ const Chat = ({ pageId, open, setOpen }) => {
     try {
       setChat({})
 
-      await axios.patch({
-        url: `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`,
-        data: {
+      await axios.patch(
+        `${REACT_APP_APP_URL}/api/pages/${pageId}/chats`,
+        {
           status: 'closed',
         },
-        // headers: {
-        //   Authorization: `Bearer ${sessionToken}`,
-        // },
-      })
+        {
+          Authorization: `Bearer ${sessionToken}`,
+        }
+      )
     } catch (err) {
       console.log(err)
     }

@@ -117,8 +117,6 @@ const ViewPage = ({
       return bConfidence - aConfidence
     })
 
-  console.log(orderedEntities)
-
   const handleShowMore = () => {
     setShowMoreEntities(!!showMoreEntities ? null : showMore)
   }

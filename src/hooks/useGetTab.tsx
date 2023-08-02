@@ -70,12 +70,11 @@ const isLikelyArticle = (htmlString: string, url: string) => {
 const useGetTab = () => {
   const [url, setUrl] = useState<any>(null)
   const [html, setHtml] = useState<any>(null)
-  const [isArticle, setIsArticle] = useState<any>(false)
-  const [prohibited, setProhibited] = useState<any>(false)
+  const [isArticle, setIsArticle] = useState<any>(null)
+  const [prohibited, setProhibited] = useState<any>(null)
 
   useEffect(() => {
     const getUrl = async () => {
-      console.log('getting url')
       let tabId = null
       let h = null
       let u = ''
@@ -90,13 +89,11 @@ const useGetTab = () => {
         tabId = tab?.id || null
 
         if (!u) {
-          console.log('URL not found')
           return
         }
 
         let url_as_url = new URL(u)
         if (url_as_url.pathname === '/') {
-          console.log('Prohibited URL')
           return
         }
 
@@ -107,6 +104,7 @@ const useGetTab = () => {
           'chrome-native://',
           'chrome-search://',
           'chrome-untrusted://',
+          'localhost:',
           'file://',
         ]
 
@@ -115,7 +113,6 @@ const useGetTab = () => {
         )
 
         if (isProhibited || !u || !tabId) {
-          console.log('Prohibited URL')
           setHtml(null)
           setUrl(null)
           setIsArticle(false)
@@ -136,6 +133,7 @@ const useGetTab = () => {
 
           h = res[0]?.result
           setIsArticle(isLikelyArticle(h, u))
+          setProhibited(false)
           setHtml(h)
           setUrl(u)
         }

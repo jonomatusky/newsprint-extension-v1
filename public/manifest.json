@@ -3,7 +3,7 @@
   "description": "Summarize, save and share news articles",
   "version": "0.0.1",
   "manifest_version": 3,
-  "permissions": ["tabs", "scripting", "activeTab"],
+  "permissions": ["tabs", "scripting", "activeTab", "storage"],
   "action": {
     "default_popup": "index.html",
     "default_title": "Open Newsprint"

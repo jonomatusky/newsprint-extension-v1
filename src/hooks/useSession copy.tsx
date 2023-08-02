@@ -12,10 +12,6 @@ const useSession = () => {
   const [auth, setAuth] = React.useState(null as boolean | null)
   const [extensionId, setExtensionId] = React.useState(null as String | null)
 
-  console.log('sessionToken', sessionToken)
-  console.log('extensionId', extensionId)
-  console.log('storageReady', storageReady)
-
   useEffect(() => {
     const interval = setInterval(() => {
       if (chrome && chrome.storage && chrome.storage.local) {
@@ -68,13 +64,11 @@ const useSession = () => {
         // save token to local storage
         if (!!token) {
           chrome.storage.local.set({ token }, () => {
-            console.log('Token saved to local storage')
+            // console.log('Token saved to local storage')
           })
           setAuth(true)
           setSessionToken(token)
         }
-
-        console.log(response)
       } catch (e) {
         console.error(e)
       }

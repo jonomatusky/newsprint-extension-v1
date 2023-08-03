@@ -2,12 +2,18 @@
 
 import './App.css'
 import React from 'react'
-import { Box, Button, CircularProgress, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Grid, Typography } from '@mui/material'
 import PageFrame from './components/page-frame'
 import useSession from './hooks/useSession'
 import { SessionContext } from './context/session-context'
+// import posthog from 'posthog-js'
 
 const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
+// const REACT_APP_POSTHOG_KEY = process.env.REACT_APP_POSTHOG_KEY || ''
+
+// posthog.init(REACT_APP_POSTHOG_KEY, {
+//   api_host: 'https://app.posthog.com',
+// })
 
 function App() {
   const { sessionToken, auth, extensionId, logout, error } = useSession()
@@ -63,23 +69,35 @@ function App() {
                 justifyContent="center"
                 flexWrap="wrap"
               >
-                <Typography
-                  variant="h5"
-                  gutterBottom
-                  textAlign="center"
-                  width="100vw"
-                >
-                  Sign up to get started
-                </Typography>
-                <Button
-                  onClick={() => handleOpenAuth(true)}
-                  variant="contained"
-                >
-                  Sign up
-                </Button>
-                <Button onClick={() => handleOpenAuth()} variant="outlined">
-                  Sign in
-                </Button>
+                <Grid container spacing={1}>
+                  <Grid item xs={12} textAlign="center">
+                    <Typography
+                      variant="h5"
+                      gutterBottom
+                      textAlign="center"
+                      width="100vw"
+                    >
+                      Sign in to get started
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} textAlign="center">
+                    <Button
+                      onClick={() => handleOpenAuth()}
+                      variant="outlined"
+                      sx={{ mr: 0.5 }}
+                    >
+                      Sign in
+                    </Button>
+
+                    <Button
+                      onClick={() => handleOpenAuth(true)}
+                      variant="contained"
+                      sx={{ ml: 0.5 }}
+                    >
+                      Sign up
+                    </Button>
+                  </Grid>
+                </Grid>
               </Box>
             </Box>
           )}

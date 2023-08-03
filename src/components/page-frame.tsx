@@ -114,7 +114,10 @@ function PageFrame() {
         setPage(fetchedPage)
         setStatus('complete')
       } catch (err: any) {
-        console.log(err)
+        // remove token if 403 error
+        if (err.response && err.response.status === 403) {
+          logout()
+        }
 
         if (err.response && err.response.status === 404 && analyzeIfNotFound) {
           try {
@@ -131,7 +134,7 @@ function PageFrame() {
         }
       }
     },
-    [analyze, url, sessionToken]
+    [analyze, url, sessionToken, logout]
   )
 
   const fetchLists = useCallback(async () => {
@@ -279,10 +282,12 @@ function PageFrame() {
         justifyContent="center"
         alignItems="center"
       >
-        <Typography width="100%" textAlign="center">
-          Error loading page
-        </Typography>
-        <Button onClick={logout}>Log Out</Button>
+        <Box textAlign="center">
+          <Typography width="100%" textAlign="center">
+            Error loading page
+          </Typography>
+          <Button onClick={logout}>Log Out</Button>
+        </Box>
       </Box>
     )
   }
@@ -308,6 +313,7 @@ function PageFrame() {
       pageLists={pageLists}
       onUpdateLists={handleUpdateLists}
       analyze={analyze}
+      logout={logout as any}
     />
   )
 }

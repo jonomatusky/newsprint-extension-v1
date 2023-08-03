@@ -1,6 +1,7 @@
 /* global chrome */
 
 import axios from 'axios'
+// import { posthog } from 'posthog-js'
 import React, { useEffect } from 'react'
 import { v4 as uuid } from 'uuid'
 // import jwt, { JwtPayload } from 'jsonwebtoken'
@@ -11,7 +12,7 @@ type useSessionReturnType = {
   auth: boolean | null
   extensionId: String | null
   logout: () => Promise<void>
-  user: Object
+  // user: Object
   error: boolean
 }
 
@@ -21,14 +22,14 @@ const useSession = (): useSessionReturnType => {
   const [storageReady, setStorageReady] = React.useState(false)
   const [sessionToken, setSessionToken] = React.useState(null as String | null)
   const [auth, setAuth] = React.useState(null as boolean | null)
-  const [user, setUser] = React.useState({})
+  // const [user, setUser] = React.useState({})
   const [error, setError] = React.useState(false as boolean)
   const [extensionId, setExtensionId] = React.useState(null as String | null)
 
   console.log('extensionId', extensionId)
   console.log('storageReady', storageReady)
   console.log('auth', auth)
-  console.log('user', user)
+  // console.log('user', user)
 
   useEffect(() => {
     chrome.storage.local.get(null, function (data) {
@@ -42,41 +43,41 @@ const useSession = (): useSessionReturnType => {
     setSessionToken(null)
   }
 
-  useEffect(() => {
-    const getMe = async () => {
-      try {
-        const response = await axios.get(
-          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${sessionToken}`,
-            },
-          }
-        )
-        const data = response.data || {}
-        const user = data.data
+  // useEffect(() => {
+  //   const getMe = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me`,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${sessionToken}`,
+  //           },
+  //         }
+  //       )
+  //       const data = response.data || {}
+  //       const user = data.data
 
-        if (!!user) {
-          setAuth(true)
-          setUser(user)
-          setExtensionId(null)
-        } else {
-          setAuth(false)
-        }
-      } catch (err: any) {
-        // remove token if 403 error
-        if (err.response && err.response.status === 403) {
-          logout()
-        } else {
-          setError(true)
-        }
-      }
-    }
+  //       if (!!user) {
+  //         setAuth(true)
+  //         setUser(user)
+  //         setExtensionId(null)
+  //       } else {
+  //         setAuth(false)
+  //       }
+  //     } catch (err: any) {
+  //       // remove token if 403 error
+  //       if (err.response && err.response.status === 403) {
+  //         logout()
+  //       } else {
+  //         setError(true)
+  //       }
+  //     }
+  //   }
 
-    if (!!sessionToken) {
-      getMe()
-    }
-  }, [sessionToken])
+  //   if (!!sessionToken) {
+  //     getMe()
+  //   }
+  // }, [sessionToken])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -125,6 +126,8 @@ const useSession = (): useSessionReturnType => {
             // }
 
             setSessionToken(result.token)
+            setAuth(true)
+            setExtensionId(null)
           } catch (err) {
             logout()
           }
@@ -143,12 +146,26 @@ const useSession = (): useSessionReturnType => {
         )
 
         // get token from response
-        const token = response.data?.token
+        const data = response.data || {}
+        const token = data.token
+        const user = data.user
 
         // save token to local storage
         if (!!token) {
           await chrome.storage.local.set({ token })
+
+          if (!!user) {
+            console.log('user', user)
+            await chrome.storage.local.set({ user })
+            // posthog.identify(user.id, {
+            //   email: user.email,
+            //   name: user.first_name + ' ' + user.last_name,
+            // })
+          }
+
           setSessionToken(token)
+          setAuth(true)
+          setExtensionId(null)
         }
       } catch (err: any) {
         // if extension id is already claimed, remove extension id
@@ -171,7 +188,7 @@ const useSession = (): useSessionReturnType => {
     }
   }, [extensionId, auth, storageReady])
 
-  return { sessionToken, auth, extensionId, logout, user, error }
+  return { sessionToken, auth, extensionId, logout, error }
 }
 
 export default useSession

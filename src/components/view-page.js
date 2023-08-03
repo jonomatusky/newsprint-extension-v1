@@ -1,6 +1,6 @@
 /* global chrome */
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Button,
@@ -31,6 +31,7 @@ const ViewPage = ({
   entities = [],
   onUpdateLists,
   analyze,
+  logout = null,
 }) => {
   const [open, setOpen] = useState(false)
 
@@ -160,6 +161,13 @@ const ViewPage = ({
                     </IconButton>
                   </Box>
                 )}
+                {/* {logout && (
+                  <Box alignItems="center" mr={-1}>
+                    <IconButton onClick={logout}>
+                      <Logout />
+                    </IconButton>
+                  </Box>
+                )} */}
               </Box>
               <ListSelector
                 page={page}

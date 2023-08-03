@@ -26,10 +26,10 @@ import { SessionContext } from '../context/session-context'
 const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
 
 const Chat = ({ pageId, open, setOpen }) => {
+  const { sessionToken } = useContext(SessionContext)
+
   const [chat, setChat] = useState({})
   const [message, setMessage] = useState('')
-
-  const { sessionToken } = useContext(SessionContext)
 
   let messages = chat.messages || []
   let messagesLength = messages.length || 0
@@ -188,7 +188,9 @@ const Chat = ({ pageId, open, setOpen }) => {
           status: 'closed',
         },
         {
-          Authorization: `Bearer ${sessionToken}`,
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+          },
         }
       )
     } catch (err) {
@@ -293,8 +295,6 @@ const Chat = ({ pageId, open, setOpen }) => {
             }}
             backgroundColor="card.default"
           >
-            {' '}
-            {/* THIS ONE */}
             <Grid
               container
               spacing={1.5}
@@ -319,7 +319,9 @@ const Chat = ({ pageId, open, setOpen }) => {
                       }}
                     >
                       <Box p={1.5}>
-                        <Typography variant="body2">{content}</Typography>
+                        <Typography variant="body2" whiteSpace="pre-line">
+                          {content}
+                        </Typography>
                       </Box>
                     </Paper>
                   </Box>

@@ -86,7 +86,11 @@ const ViewPage = ({
 
   for (const pageEntity of pageEntities) {
     const mentions = getMentionsForPageEntity(pageEntity)
+    const quotes = page.quotes?.filter(
+      quote => quote.entity_id === pageEntity.entity.id
+    )
     pageEntity.mentions = mentions
+    pageEntity.quotes = quotes
   }
 
   const orderedEntities = pageEntities
@@ -250,7 +254,7 @@ const ViewPage = ({
         ) : (
           <></>
         )}
-        {quotes && quotes.length > 0 ? (
+        {/* {quotes && quotes.length > 0 ? (
           <>
             <Grid item xs={12} container spacing={1}>
               <Grid item xs={12}>
@@ -277,7 +281,7 @@ const ViewPage = ({
           </Grid>
         ) : (
           <></>
-        )}
+        )} */}
         {orderedEntities && orderedEntities.length > 0 ? (
           <Grid item xs={12} container spacing={1}>
             <Grid item xs={12}>

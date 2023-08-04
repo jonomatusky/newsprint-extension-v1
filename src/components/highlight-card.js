@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   Box,
   Chip,
@@ -20,12 +20,12 @@ const HighlightCard = ({
   mentions: allMentions,
   quotes: allQuotes,
 }) => {
-  const [expandedId, setExpandedId] = useState(null)
+  // const [expandedId, setExpandedId] = useState(null)
   const [showMore, setShowMore] = useState(false)
 
-  const handleExpandEntity = id => {
-    setExpandedId(expandedId === id ? null : id)
-  }
+  // const handleExpandEntity = id => {
+  //   setExpandedId(expandedId === id ? null : id)
+  // }
 
   const getMentionsForPageEntity = pageEntity => {
     const filteredMentions =
@@ -53,7 +53,7 @@ const HighlightCard = ({
 
   const mentions = getMentionsForPageEntity(entity)
 
-  const headline = mentions[0]?.excerpt_begin_offset === 0
+  // const headline = mentions[0]?.excerpt_begin_offset === 0
 
   const getProminence = pageEntity => {
     const salience = pageEntity?.salience
@@ -70,15 +70,14 @@ const HighlightCard = ({
   const prominence = getProminence(entity)
 
   const getPlacement = pageEntity => {
-    if (mentions[0]?.excerpt_begin_offset === 0) {
+    if (mentions[0]?.begin_offset === 0) {
       return 'Headline'
-    } else if (mentions[0]?.excerpt_begin_offset < 250) {
+    } else if (mentions[0]?.begin_offset < 300) {
       return 'Lead'
     } else {
       return 'Body'
     }
   }
-
   const placement = getPlacement(entity)
 
   const getSentiment = pageEntity => {

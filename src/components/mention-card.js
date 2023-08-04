@@ -43,9 +43,9 @@ const MentionCard = ({ pageEntity: entity }) => {
   const prominence = getProminence(entity)
 
   const getPlacement = pageEntity => {
-    if (mentions[0]?.excerpt_begin_offset === 0) {
+    if (mentions[0]?.begin_offset === 0) {
       return 'Headline'
-    } else if (mentions[0]?.excerpt_begin_offset < 250) {
+    } else if (mentions[0]?.begin_offset < 300) {
       return 'Lead'
     } else {
       return 'Body'
@@ -65,6 +65,8 @@ const MentionCard = ({ pageEntity: entity }) => {
   }
 
   const sentiment = getSentiment(entity)
+
+  const quotes = entity?.quotes || []
 
   return (
     <Card elevation={0} onClick={() => setShowMore(!showMore)}>
@@ -113,6 +115,14 @@ const MentionCard = ({ pageEntity: entity }) => {
                     size="small"
                     sx={{ ml: 0.5 }}
                   />
+                  {quotes && quotes.length > 0 && (
+                    <Chip
+                      label="Quoted"
+                      color="primary"
+                      size="small"
+                      sx={{ ml: 0.5 }}
+                    />
+                  )}
                   {/* <Chip
                     label={
                       mentions.length +
@@ -132,11 +142,11 @@ const MentionCard = ({ pageEntity: entity }) => {
                 </Box>
               </Box>
               <Box flexGrow={0}>
-                <Box mt={0.5}>
+                {/* <Box mt={0.5}>
                   <Typography variant="body2" textAlign="center">
                     <b>{mentions.length}</b> time{mentions.length > 1 && 's'}
                   </Typography>
-                </Box>
+                </Box> */}
                 {/* <Box>
                   <Button
                     label={mentions.length}
@@ -153,6 +163,19 @@ const MentionCard = ({ pageEntity: entity }) => {
               </Box>
             </Box>
           </Grid>
+          {quotes &&
+            quotes.length > 0 &&
+            quotes.map(quote => (
+              <Grid item xs={12} key={quote.id}>
+                <Card elevation={0} sx={{ bgcolor: 'background.paperLight' }}>
+                  <Box p={2}>
+                    <Typography variant="body2">
+                      <i>{`"${quote.quote}"`}</i>
+                    </Typography>
+                  </Box>
+                </Card>
+              </Grid>
+            ))}
           {/* {showMore &&
             mentions.map(mention => (
               <Grid item xs={12} key={mention.id}>

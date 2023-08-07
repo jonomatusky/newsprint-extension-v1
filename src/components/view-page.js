@@ -14,7 +14,6 @@ import {
   Typography,
 } from '@mui/material'
 import PanelSummary from './panel-summary'
-import CardQuote from './card-quote'
 import ListSelector from './list-selector'
 import Chat from './chat'
 import MentionCard from './mention-card'
@@ -54,12 +53,6 @@ const ViewPage = ({
         pageEntity?.entity?.name !== page.publisher_name
     )
   }
-
-  const getPageEntityFromId = id => {
-    return pageEntities.find(pageEntity => pageEntity.entity.id === id)
-  }
-
-  const quotes = page.quotes?.sort((a, b) => a.index > b.index)
 
   // const orderedEntities = organzations.concat(people)
 

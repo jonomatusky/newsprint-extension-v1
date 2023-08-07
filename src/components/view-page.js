@@ -21,6 +21,9 @@ import MentionCard from './mention-card'
 import { Check, OpenInNew } from '@mui/icons-material'
 
 const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
+const REACT_APP_IS_DEVELOPMENT = process.env.REACT_APP_IS_DEVELOPMENT
+  ? true
+  : false
 
 const ViewPage = ({
   page = {},
@@ -104,12 +107,16 @@ const ViewPage = ({
       const bConfidence = b.confidence || 0
       const aMentions = a.mentions?.length || 0
       const bMentions = b.mentions?.length || 0
+      const aQuotes = a.quotes?.length || 0
+      const bQuotes = b.quotes?.length || 0
 
-      const aHighConfidence = aConfidence >= 0.6
-      const bHighConfidence = bConfidence >= 0.6
+      // Compare by number of quotes first
+      if (aQuotes !== bQuotes) {
+        return bQuotes - aQuotes
+      }
 
       // Compare whether one is above or below 0.60
-      if (aHighConfidence !== bHighConfidence) {
+      if (aConfidence >= 0.6 !== bConfidence >= 0.6) {
         return aConfidence >= 0.6 ? -1 : 1
       }
 
@@ -312,7 +319,7 @@ const ViewPage = ({
         ) : (
           <></>
         )}
-        {page.analysis_status.startsWith('failed') && (
+        {REACT_APP_IS_DEVELOPMENT && (
           <Grid item xs={12}>
             <Card>
               <Box

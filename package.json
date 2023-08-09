@@ -9,6 +9,7 @@
     "@mui/material": "^5.14.0",
     "@types/chrome": "^0.0.240",
     "axios": "^1.4.0",
+    "posthog-js": "^1.75.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.9.0",

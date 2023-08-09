@@ -1,7 +1,7 @@
 /* global chrome */
 
 import axios from 'axios'
-// import { posthog } from 'posthog-js'
+import { posthog } from 'posthog-js'
 import React, { useEffect } from 'react'
 import { v4 as uuid } from 'uuid'
 // import jwt, { JwtPayload } from 'jsonwebtoken'
@@ -157,10 +157,10 @@ const useSession = (): useSessionReturnType => {
           if (!!user) {
             console.log('user', user)
             await chrome.storage.local.set({ user })
-            // posthog.identify(user.id, {
-            //   email: user.email,
-            //   name: user.first_name + ' ' + user.last_name,
-            // })
+            posthog.identify(user.id, {
+              email: user.email,
+              name: user.first_name + ' ' + user.last_name,
+            })
           }
 
           setSessionToken(token)

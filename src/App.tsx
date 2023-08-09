@@ -6,14 +6,19 @@ import { Box, Button, CircularProgress, Grid, Typography } from '@mui/material'
 import PageFrame from './components/page-frame'
 import useSession from './hooks/useSession'
 import { SessionContext } from './context/session-context'
-// import posthog from 'posthog-js'
+import posthog from 'posthog-js'
 
 const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
-// const REACT_APP_POSTHOG_KEY = process.env.REACT_APP_POSTHOG_KEY || ''
+const REACT_APP_POSTHOG_KEY = process.env.REACT_APP_POSTHOG_KEY || ''
 
-// posthog.init(REACT_APP_POSTHOG_KEY, {
-//   api_host: 'https://app.posthog.com',
-// })
+posthog.init(REACT_APP_POSTHOG_KEY, {
+  api_host: REACT_APP_APP_URL + '/ingest',
+  disable_session_recording: true,
+  loaded: () => {
+    console.log('Posthog loaded')
+    if (process.env.NODE_ENV === 'development') posthog.debug()
+  },
+})
 
 function App() {
   const { sessionToken, auth, extensionId, logout, error } = useSession()

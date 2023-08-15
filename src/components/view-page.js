@@ -1,46 +1,41 @@
-/* global chrome */
-
-import { useState } from 'react'
-import {
-  Box,
-  Button,
-  Card,
-  CircularProgress,
-  Grid,
-  IconButton,
-  List,
-  ListItem,
-  Skeleton,
-  Typography,
-} from '@mui/material'
-import PanelSummary from './panel-summary'
+import React, { useState } from 'react'
+import { Box, Chip, CircularProgress, Grid, Typography } from '@mui/material'
 import ListSelector from './list-selector'
 import Chat from './chat'
-import MentionCard from './mention-card'
-import { Check, OpenInNew } from '@mui/icons-material'
-
-const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
-const REACT_APP_IS_DEVELOPMENT = process.env.REACT_APP_IS_DEVELOPMENT
-  ? true
-  : false
+import CardBrief from './card-brief'
+import { OpenInNew } from '@mui/icons-material'
 
 const ViewPage = ({
   page = {},
   lists = null,
-  pageLists = null,
+  pageListPages = null,
   isLoading = false,
   isError = false,
-  entities = [],
   onUpdateLists,
-  analyze,
-  logout = null,
 }) => {
   const [open, setOpen] = useState(false)
+
+  const pageLists = pageListPages?.map(listPage => listPage.list)
+
+  console.log(pageLists)
 
   // show 10 entities, util user clicks show more
   const showMore = 10
 
   const [showMoreEntities, setShowMoreEntities] = useState(showMore)
+
+  if (isLoading || !page)
+    return (
+      <Box
+        textAlign="center"
+        justifyContent="center"
+        display="flex"
+        alignItems="center"
+        height="200px"
+      >
+        <CircularProgress />
+      </Box>
+    )
 
   if (isError) return <div>failed to load</div>
 
@@ -53,6 +48,12 @@ const ViewPage = ({
         pageEntity?.entity?.name !== page.publisher_name
     )
   }
+
+  const getPageEntityFromId = id => {
+    return pageEntities.find(pageEntity => pageEntity.entity.id === id)
+  }
+
+  const quotes = page.quotes?.sort((a, b) => a.index > b.index)
 
   // const orderedEntities = organzations.concat(people)
 
@@ -126,216 +127,86 @@ const ViewPage = ({
     setShowMoreEntities(!!showMoreEntities ? null : showMore)
   }
 
-  if (isLoading || !page)
-    return (
-      <Box
-        textAlign="center"
-        justifyContent="center"
-        display="flex"
-        alignItems="center"
-        height="200px"
-      >
-        <CircularProgress />
-      </Box>
-    )
-
-  const backendUrl = REACT_APP_APP_URL + '?a=' + encodeURIComponent(page.url)
-
-  const handleOpenInNew = () => {
-    chrome.tabs.create({ url: backendUrl })
-  }
+  const page_authors = page.authors || []
 
   return (
-    <Box p={2.5} height="600px" overflow={open ? 'hidden' : 'scroll'}>
-      <Grid container spacing={1.5}>
+    <>
+      {/* <Chat /> */}
+      <Grid container spacing={2}>
+        {!!page && lists && pageLists && (
+          <Grid item xs={12}>
+            <ListSelector
+              page={page}
+              lists={lists}
+              pageLists={pageLists.filter(pageList => !!pageList.name)}
+              onUpdate={onUpdateLists}
+            />
+          </Grid>
+        )}
         <Grid item xs={12}>
-          <Card>
-            <Box p={2.5} pt={1} pb={2}>
-              <Box display="flex">
-                <Box flexGrow={1} display="flex" alignItems="center">
-                  <Check color="primary" sx={{ mr: 0.5 }} />
-                  <Typography>
-                    <b>Saved to Newsprint</b>
-                  </Typography>
-                </Box>
-                {page.url && (
-                  <Box alignItems="center" mr={-1}>
-                    <IconButton onClick={handleOpenInNew}>
-                      <OpenInNew />
-                    </IconButton>
-                  </Box>
-                )}
-                {/* {logout && (
-                  <Box alignItems="center" mr={-1}>
-                    <IconButton onClick={logout}>
-                      <Logout />
-                    </IconButton>
-                  </Box>
-                )} */}
-              </Box>
-              <ListSelector
-                page={page}
-                lists={lists}
-                pageLists={pageLists}
-                onUpdate={onUpdateLists}
-              />
-            </Box>
-          </Card>
+          {/* <Box
+          overflow="scroll"
+          sx={{
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none',
+          }}
+        > */}
+          {!!page.title && (
+            <Typography gutterBottom>
+              <b>{page.title}</b>
+            </Typography>
+          )}
+          {(!!page.publisher_name || !!page.author_name) && (
+            <Typography variant="body2">
+              <i>
+                {[page.publisher_name, page.author_name]
+                  .filter(Boolean)
+                  .join(' | ')}
+              </i>
+            </Typography>
+          )}
         </Grid>
-        {/* {!!page.title && (
+        {page_authors && page_authors.length > 0 && (
           <Grid item xs={12}>
-            <Card>
-              <Box p={2.5} pt={2} pb={2}>
-                <Typography gutterBottom>
-                  <b>{page.title}</b>
-                </Typography>
-                {(!!page.publisher_name || !!page.author_name) && (
-                  <Typography variant="body2">
-                    <i>
-                      {[page.publisher_name, page.author_name]
-                        .filter(Boolean)
-                        .join(' | ')}
-                    </i>
-                  </Typography>
-                )}
-              </Box>
-            </Card>
-          </Grid>
-        )} */}
-        {page.summary ? (
-          <Grid item xs={12}>
-            <PanelSummary summary={page.summary} />
-          </Grid>
-        ) : page.analysis_status === 'pending' ? (
-          <Grid item xs={12}>
-            <Card>
-              <Box p={3.5} pl={4} pt={3} pb={2.5}>
-                <List sx={{ listStyleType: 'disc', pl: 1, pt: 0, pb: 0 }}>
-                  <ListItem
-                    sx={{
-                      display: 'list-item',
-                      pt: 0,
-                      pb: 1,
-                      pl: 0,
-                      pr: 0,
-                    }}
-                  >
-                    <Skeleton variant="text" />
-                    <Skeleton variant="text" />
-                  </ListItem>
-                  <ListItem
-                    sx={{
-                      display: 'list-item',
-                      pt: 0,
-                      pb: 1,
-                      pl: 0,
-                      pr: 0,
-                    }}
-                  >
-                    <Skeleton variant="text" />
-                    <Skeleton variant="text" />
-                  </ListItem>
-                  <ListItem
-                    sx={{
-                      display: 'list-item',
-                      pt: 0,
-                      pb: 1,
-                      pl: 0,
-                      pr: 0,
-                    }}
-                  >
-                    <Skeleton variant="text" />
-                    <Skeleton variant="text" />
-                  </ListItem>
-                </List>
-              </Box>
-            </Card>
-          </Grid>
-        ) : (
-          <></>
-        )}
-        {/* {quotes && quotes.length > 0 ? (
-          <>
-            <Grid item xs={12} container spacing={1}>
-              <Grid item xs={12}>
-                <Typography>Quotes</Typography>
-              </Grid>
-              {quotes.map((quote, index) => (
-                <Grid item xs={12} key={quote.id}>
-                  <CardQuote
-                    quote={quote.quote}
-                    author={getPageEntityFromId(quote.entity_id)?.entity?.name}
-                  />
-                </Grid>
+            <Box display="flex" flexWrap="wrap">
+              <Chip
+                color="primary"
+                to={`/outlets/${page.channel?.id}`}
+                key={page.channel?.id}
+                label={page.channel?.name || 'Test'}
+                sx={{ mr: 0.5, mb: 0.5 }}
+                onDelete={() => {}}
+                deleteIcon={<OpenInNew fontSize="small" />}
+              />
+              {page_authors.map((page_author, index) => (
+                <Chip
+                  to={`/authors/${page_author.entity.id}`}
+                  key={page_author.id}
+                  label={page_author?.entity.name}
+                  sx={{ mr: 0.5, mb: 0.5 }}
+                  onDelete={() => {}}
+                  deleteIcon={<OpenInNew fontSize="small" />}
+                />
               ))}
-            </Grid>
-          </>
-        ) : page.analysis_status === 'pending' ? (
-          <Grid item xs={12}>
-            <Card>
-              <Box p={3.5} pl={4} pt={3} pb={2.5}>
-                <Skeleton variant="text" />
-                <Skeleton variant="text" />
-              </Box>
-            </Card>
+            </Box>
           </Grid>
-        ) : (
-          <></>
-        )} */}
-        {orderedEntities && orderedEntities.length > 0 ? (
-          <Grid item xs={12} container spacing={1}>
-            <Grid item xs={12}>
-              <Typography>Mentions</Typography>
-            </Grid>
-            {orderedEntities
-              .slice(0, showMoreEntities || orderedEntities.length)
-              .map(entity => (
-                <Grid item xs={12}>
-                  <MentionCard pageEntity={entity} />
-                </Grid>
-              ))}
-            {!!showMoreEntities && orderedEntities.length > showMore && (
-              <Grid item xs={12}>
-                <Button onClick={handleShowMore}>Show More</Button>
-              </Grid>
-            )}
-          </Grid>
-        ) : page.analysis_status === 'pending' ? (
-          <Grid item xs={12}>
-            <Card>
-              <Box p={3.5} pl={4} pt={3} pb={2.5}>
-                <Skeleton variant="text" />
-                <Skeleton variant="text" />
-              </Box>
-            </Card>
-          </Grid>
-        ) : (
-          <></>
         )}
-        {REACT_APP_IS_DEVELOPMENT && (
-          <Grid item xs={12}>
-            <Card>
-              <Box
-                p={3.5}
-                pl={4}
-                pt={3}
-                pb={2.5}
-                display="flex"
-                flexWrap="wrap"
-                justifyContent="center"
-              >
-                <Box width="100%">
-                  <Typography gutterBottom textAlign="center">
-                    <b>Analysis Failed</b>
+        {pageListPages &&
+          pageListPages.map(
+            pageList =>
+              pageList.analyses &&
+              pageList.analyses.map(analysis => (
+                <Grid item xs={12} key={analysis.id}>
+                  <Typography variant="body2" ml={1} gutterBottom>
+                    <b>{pageList.list.name}</b>
                   </Typography>
-                </Box>
-                <Button variant="contained" onClick={analyze}>
-                  Try Again
-                </Button>
-              </Box>
-            </Card>
-          </Grid>
-        )}
+                  <CardBrief analysis={analysis} />
+                </Grid>
+              ))
+          )}
         <Grid item xs={12}>
           <Box height={open ? 640 : 100} />
         </Grid>
@@ -357,7 +228,7 @@ const ViewPage = ({
       >
         <Chat pageId={page.id} open={open} setOpen={setOpen} />
       </Box>
-    </Box>
+    </>
   )
 }
 

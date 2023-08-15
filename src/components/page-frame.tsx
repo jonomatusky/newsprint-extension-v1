@@ -36,7 +36,13 @@ function PageFrame() {
   // const [pageListStatus, setPageListStatus] = useState<any>('idle')
   const analysisStatus = page?.analysis_status || null
 
-  let pageLists = page?.lists || []
+  let pageListPages = page?.lists || []
+
+  console.log(pageListPages)
+
+  let pageLists = pageListPages.map((pageListPage: any) => {
+    return pageListPage.list
+  })
 
   useEffect(() => {
     let urlToOpen = REACT_APP_APP_URL
@@ -76,18 +82,40 @@ function PageFrame() {
   }, [])
 
   const handleUpdateLists = async (listIds: Array<String>) => {
+    const listIdsToRemove = pageLists
+      .filter((list: any) => !listIds.includes(list.id))
+      .map((list: any) => list.id)
+    const listIdsToAdd = listIds.filter(
+      listId => !pageLists.map((list: any) => list.id).includes(listId)
+    )
+
     try {
-      await axios.patch(
-        `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/me/pages/${page.id}/lists`,
-        {
-          list_ids: listIds,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionToken}`,
-          },
-        }
-      )
+      for (const listId of listIdsToRemove) {
+        console.log('removing')
+        console.log(listId)
+        await axios.delete(
+          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/api/lists/${listId}/pages/${page.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        )
+      }
+
+      for (const listId of listIdsToAdd) {
+        console.log('adding')
+        console.log(listId)
+        await axios.post(
+          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/api/lists/${listId}/pages`,
+          [page.id],
+          {
+            headers: {
+              Authorization: `Bearer ${sessionToken}`,
+            },
+          }
+        )
+      }
     } catch (err) {
       console.log(err)
     }
@@ -307,14 +335,14 @@ function PageFrame() {
   }
 
   return (
-    <ViewPage
-      page={page}
-      lists={lists}
-      pageLists={pageLists}
-      onUpdateLists={handleUpdateLists}
-      analyze={analyze}
-      logout={logout as any}
-    />
+    <Box p={2}>
+      <ViewPage
+        page={page}
+        lists={lists}
+        pageListPages={pageListPages}
+        onUpdateLists={handleUpdateLists}
+      />
+    </Box>
   )
 }
 

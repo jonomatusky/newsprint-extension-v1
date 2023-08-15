@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Autocompleter from './autocompleter'
 
 const ListSelector = ({ lists = [], pageLists = [], onUpdate }) => {
-  let pageListIds = pageLists.map(list => list.list_id)
+  let pageListIds = pageLists.map(list => list.id)
   const [value, setValue] = useState(pageListIds)
 
   const handleChange = async newValue => {
@@ -27,8 +27,6 @@ const ListSelector = ({ lists = [], pageLists = [], onUpdate }) => {
       // loading={loading}
       size="small"
       disablePortal
-      disableClearable
-      disabled={!lists || lists?.length === 0}
     />
   )
 }

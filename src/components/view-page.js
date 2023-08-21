@@ -17,13 +17,6 @@ const ViewPage = ({
 
   const pageLists = pageListPages?.map(listPage => listPage.list)
 
-  console.log(pageLists)
-
-  // show 10 entities, util user clicks show more
-  const showMore = 10
-
-  const [showMoreEntities, setShowMoreEntities] = useState(showMore)
-
   if (isLoading || !page)
     return (
       <Box
@@ -49,14 +42,6 @@ const ViewPage = ({
     )
   }
 
-  const getPageEntityFromId = id => {
-    return pageEntities.find(pageEntity => pageEntity.entity.id === id)
-  }
-
-  const quotes = page.quotes?.sort((a, b) => a.index > b.index)
-
-  // const orderedEntities = organzations.concat(people)
-
   const mentions = page?.mentions || []
 
   const getMentionsForPageEntity = pageEntity => {
@@ -66,19 +51,6 @@ const ViewPage = ({
       mentions.filter(m => m.entity_id === pageEntity?.entity.id) || []
 
     return filteredMentions
-
-    // let seen = new Set()
-
-    // return filteredMentions.filter(m => {
-    //   const key = `${m.excerpt_begin_offset}-${m.excerpt_end_offset}`
-
-    //   if (seen.has(key)) {
-    //     return false
-    //   } else {
-    //     seen.add(key)
-    //     return true
-    //   }
-    // })
   }
 
   for (const pageEntity of pageEntities) {
@@ -90,48 +62,10 @@ const ViewPage = ({
     pageEntity.quotes = quotes
   }
 
-  const orderedEntities = pageEntities
-    .filter(
-      pageEntity =>
-        pageEntity.entity.type === 'person' ||
-        pageEntity.entity.type === 'organization'
-    )
-    .sort((a, b) => {
-      const aConfidence = a.confidence || 0
-      const bConfidence = b.confidence || 0
-      const aMentions = a.mentions?.length || 0
-      const bMentions = b.mentions?.length || 0
-      const aQuotes = a.quotes?.length || 0
-      const bQuotes = b.quotes?.length || 0
-
-      // Compare by number of quotes first
-      if (aQuotes !== bQuotes) {
-        return bQuotes - aQuotes
-      }
-
-      // Compare whether one is above or below 0.60
-      if (aConfidence >= 0.6 !== bConfidence >= 0.6) {
-        return aConfidence >= 0.6 ? -1 : 1
-      }
-
-      // If the confidence levels are on the same side of 0.60, then sort by mentions
-      if (aMentions !== bMentions) {
-        return bMentions - aMentions
-      }
-
-      // If mentions are equal, sort by confidence
-      return bConfidence - aConfidence
-    })
-
-  const handleShowMore = () => {
-    setShowMoreEntities(!!showMoreEntities ? null : showMore)
-  }
-
   const page_authors = page.authors || []
 
   return (
     <>
-      {/* <Chat /> */}
       <Grid container spacing={2}>
         {!!page && lists && pageLists && (
           <Grid item xs={12}>
@@ -144,16 +78,6 @@ const ViewPage = ({
           </Grid>
         )}
         <Grid item xs={12}>
-          {/* <Box
-          overflow="scroll"
-          sx={{
-            '&::-webkit-scrollbar': {
-              display: 'none',
-            },
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-          }}
-        > */}
           {!!page.title && (
             <Typography gutterBottom>
               <b>{page.title}</b>

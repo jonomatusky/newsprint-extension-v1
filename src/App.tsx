@@ -1,43 +1,12 @@
-/* global chrome */
-
 import './App.css'
-import React from 'react'
-import { Box, Button, CircularProgress, Grid, Typography } from '@mui/material'
+import { Box, CircularProgress } from '@mui/material'
 import PageFrame from './components/page-frame'
 import useSession from './hooks/useSession'
 import { SessionContext } from './context/session-context'
-import posthog from 'posthog-js'
-
-const REACT_APP_APP_URL = process.env.REACT_APP_APP_URL || ''
-const REACT_APP_POSTHOG_KEY = process.env.REACT_APP_POSTHOG_KEY || ''
-
-posthog.init(REACT_APP_POSTHOG_KEY, {
-  api_host: REACT_APP_APP_URL + '/ingest',
-  disable_session_recording: true,
-  loaded: () => {
-    console.log('Posthog loaded')
-    if (process.env.NODE_ENV === 'development') posthog.debug()
-  },
-})
+import SignIn from './components/sign-in'
 
 function App() {
-  const { sessionToken, auth, extensionId, logout, error } = useSession()
-  // const { auth } = useSession()
-
-  // console.log('auth', auth)
-
-  const handleOpenAuth = (isSignUp = false) => {
-    try {
-      chrome.tabs.create({
-        url:
-          REACT_APP_APP_URL +
-          `/ext-auth/${isSignUp ? 'sign-up' : 'sign-in'}?id=` +
-          extensionId,
-      })
-    } catch (e) {
-      console.error(e)
-    }
-  }
+  const { sessionToken, auth, extensionId, logout } = useSession()
 
   return (
     <SessionContext.Provider
@@ -53,59 +22,14 @@ function App() {
               justifyContent="center"
               alignItems="center"
             >
-              {error ? (
+              {/* {error ? (
                 <Typography>Unable to connect</Typography>
-              ) : (
-                <CircularProgress />
-              )}
+              ) : ( */}
+              <CircularProgress />
+              {/* )} */}
             </Box>
           )}
-          {auth === false && (
-            <Box
-              height="100vh"
-              width="100vw"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Box
-                width="100vw"
-                display="flex"
-                justifyContent="center"
-                flexWrap="wrap"
-              >
-                <Grid container spacing={1}>
-                  <Grid item xs={12} textAlign="center">
-                    <Typography
-                      variant="h5"
-                      gutterBottom
-                      textAlign="center"
-                      width="100vw"
-                    >
-                      Sign in to get started
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} textAlign="center">
-                    <Button
-                      onClick={() => handleOpenAuth()}
-                      variant="outlined"
-                      sx={{ mr: 0.5 }}
-                    >
-                      Sign in
-                    </Button>
-
-                    <Button
-                      onClick={() => handleOpenAuth(true)}
-                      variant="contained"
-                      sx={{ ml: 0.5 }}
-                    >
-                      Sign up
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Box>
-            </Box>
-          )}
+          {auth === false && <SignIn />}
           {auth === true && <PageFrame />}
         </main>
       </div>

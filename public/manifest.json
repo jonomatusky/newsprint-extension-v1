@@ -8,6 +8,22 @@
     "default_popup": "index.html",
     "default_title": "Open Newsprint"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icon.png", "index.html"],
+      "matches": ["<all_urls>"],
+      "use_dynamic_url": false
+    }
+  ],
   "icons": {
     "16": "logo-16.png",
     "48": "logo-48.png",

@@ -1,7 +1,7 @@
 /* global chrome */
 
-import axios from 'axios'
-import { posthog } from 'posthog-js'
+// import axios from 'axios'
+// import { posthog } from 'posthog-js'
 import React, { useEffect } from 'react'
 import { v4 as uuid } from 'uuid'
 // import jwt, { JwtPayload } from 'jsonwebtoken'
@@ -13,23 +13,40 @@ type useSessionReturnType = {
   extensionId: String | null
   logout: () => Promise<void>
   // user: Object
-  error: boolean
+  // error: boolean
 }
 
-const { REACT_APP_APP_URL, REACT_APP_API_ENDPOINT } = process.env
+// const { REACT_APP_APP_URL, REACT_APP_API_ENDPOINT } = process.env
 
 const useSession = (): useSessionReturnType => {
   const [storageReady, setStorageReady] = React.useState(false)
   const [sessionToken, setSessionToken] = React.useState(null as String | null)
   const [auth, setAuth] = React.useState(null as boolean | null)
   // const [user, setUser] = React.useState({})
-  const [error, setError] = React.useState(false as boolean)
+  // const [error, setError] = React.useState(false as boolean)
   const [extensionId, setExtensionId] = React.useState(null as String | null)
 
-  console.log('extensionId', extensionId)
-  console.log('storageReady', storageReady)
-  console.log('auth', auth)
   // console.log('user', user)
+
+  useEffect(() => {
+    // This function gets called whenever storage changes
+    const handleStorageChange = (changes: any, namespace: any) => {
+      for (let key in changes) {
+        const change = changes[key]
+        console.log(
+          `Storage key "${key}" in namespace "${namespace}" changed. Old value was "${change.oldValue}", new value is "${change.newValue}"`
+        )
+      }
+    }
+
+    // Add the event listener when the component mounts
+    chrome.storage.onChanged.addListener(handleStorageChange)
+
+    // Cleanup: Remove the event listener when the component unmounts
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange)
+    }
+  }, [])
 
   useEffect(() => {
     chrome.storage.local.get(null, function (data) {
@@ -138,57 +155,24 @@ const useSession = (): useSessionReturnType => {
     }
   }, [storageReady, auth])
 
+  console.log(auth)
+
   useEffect(() => {
     const getTokenFromExtensionId = async () => {
-      try {
-        const response = await axios.get(
-          `${REACT_APP_APP_URL}${REACT_APP_API_ENDPOINT}/auth/ext/${extensionId}`
-        )
+      const response = await chrome.runtime.sendMessage({
+        action: 'getToken',
+        extensionId,
+      })
 
-        // get token from response
-        const data = response.data || {}
-        const token = data.token
-        const user = data.user
-
-        // save token to local storage
-        if (!!token) {
-          await chrome.storage.local.set({ token })
-
-          if (!!user) {
-            console.log('user', user)
-            await chrome.storage.local.set({ user })
-            posthog.identify(user.id, {
-              email: user.email,
-              name: user.first_name + ' ' + user.last_name,
-            })
-          }
-
-          setSessionToken(token)
-          setAuth(true)
-          setExtensionId(null)
-        }
-      } catch (err: any) {
-        // if extension id is already claimed, remove extension id
-        try {
-          if (err.response && err.response.status === 400) {
-            chrome.storage.local.remove(['extension_id'])
-            setExtensionId(null)
-          } else {
-            console.log(err)
-          }
-        } catch (err) {
-          console.log(err)
-          setError(true)
-        }
-      }
+      console.log(response)
     }
 
-    if (extensionId && auth === false && storageReady) {
+    if (extensionId && auth === false) {
       getTokenFromExtensionId()
     }
   }, [extensionId, auth, storageReady])
 
-  return { sessionToken, auth, extensionId, logout, error }
+  return { sessionToken, auth, extensionId, logout }
 }
 
 export default useSession
